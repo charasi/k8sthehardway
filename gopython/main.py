@@ -10,6 +10,8 @@ from gopython import jenkins_tasks, gcp_tasks, read_tasks, ssh_tasks
 def main():
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/private_key.pem", ".")
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/external_ip.txt", ".")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/private_agent_key.pem",
+                           ".")
 
     ip_addr = read_tasks.get_ip_address('external_ip.txt')
 
@@ -27,8 +29,11 @@ def main():
     jenkins_url = 'http://' + ip_addr + ':8080/'
 
     jenkins_user = 'kube'
-    password = '11d466ed80ba909682b652797477def2e0'
+    password = '11f34b5bd40848fb150bcb159ce1de12ad'
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
+
+    plugins_list = ['ansible@403.v8d0ca_dcb_b_502', 'blueocean@1.27.16']
+    jenkins_tasks.install_plugins(jenkins, plugins_list)
 
     # Define the node parameters
     node_name = "kthw-agent"
@@ -49,8 +54,13 @@ def main():
     host_b = "10.240.0.60"
     key_path_b = os.path.expanduser('/home/wisccourant/.ssh/private_key.pem')
 
-    command = f"ssh -i {key_path_b} {username}@{host_b} {gsutil_command}"
+    command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
+
+    """
+    status = jenkins_tasks.create_ssh_credential(jenkins_url, jenkins_user, password, 'private_key.pem', 'kthw-agent',
+                                                 username, "")
+    """
 
     ip_addresses = [
         "10.240.0.10",
@@ -65,17 +75,17 @@ def main():
     gsutil_command = 'ssh-keyscan -H {0} >> ~/.ssh/known_hosts'
     # Correct SSH command to execute on Machine A, ensuring proper quoting
     # For each IP, replace the placeholder in gsutil_command
-    for ip_addr in ip_addresses:
+    for addr in ip_addresses:
         # Format the gsutil_command with the current IP address
-        command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command.format(ip_addr)}'"
+        command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command.format(addr)}'"
         # Execute the command for the current IP
         status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
     curl_command = f"curl -sO {jenkins_url}jnlpJars/agent.jar"
     java_command = f"java -jar agent.jar -url {jenkins_url} -secret {secret} -name {node_name} -webSocket -workDir \"{agent_work_dir}\""
-    command = f"ssh -i {key_path_b} {username}@{host_b} {curl_command}"
+    command = f"ssh -i {key_path_b} {username}@{host_b} '{curl_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
-    command = f"ssh -i {key_path_b} {username}@{host_b} {java_command}"
+    command = f"ssh -i {key_path_b} {username}@{host_b} '{java_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
     print("hi")
 

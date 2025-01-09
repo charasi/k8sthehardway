@@ -136,6 +136,39 @@ resource "google_compute_instance" "agent" {
   zone = var.zone
 }
 
+resource "google_compute_instance" "k8main" {
+  name = "k8main"
+  network_interface {
+    network = var.network_name
+    subnetwork = var.subnetwork_name
+    network_ip = "10.240.0.70"
+  }
+
+  boot_disk {
+    initialize_params {
+      size = 20
+      type = var.boot_disk_type
+      image = var.boot_disk_image
+    }
+  }
+
+  service_account {
+    scopes = var.scopes
+  }
+
+  metadata = {
+    startup-script = file("startup-script.sh")
+    ssh-keys = <<EOF
+      wisccourant:${tls_private_key.kthw_ssh.public_key_openssh}
+      wisccourant:${tls_private_key.kthw_ssh_agent.public_key_openssh}
+    EOF
+  }
+
+  machine_type = var.machine_type
+  can_ip_forward = true
+  zone = var.zone
+}
+
 # Generate SSH key pair
 resource "tls_private_key" "kthw_ssh" {
   algorithm = "RSA"
