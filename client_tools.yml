@@ -12,6 +12,7 @@
             url: "https://github.com/cloudflare/cfssl/releases/download/v1.6.5/cfssl_1.6.5_linux_amd64"
             dest: /home/wisccourant/
             mode: "0600"
+          register: cfssl_output
 
         - name: Print cfssl information from the previous task
           ansible.builtin.debug:
@@ -35,7 +36,7 @@
             verbosity: 0
 
         - name: Rename to cfssljson
-          ansible.builtin.command: mv "cfssljson_1.6.5_linux_amd64" /home/wisccourant/cfssljson
+          ansible.builtin.command: mv "{{ cfssljson_output.dest }}" /home/wisccourant/cfssljson
           changed_when: false
 
         - name: Set cfssl to executable
