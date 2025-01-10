@@ -69,7 +69,7 @@ def main():
     secret = root.find(".//argument").text  # Extract the agent secret
 
     # Step 9: Define the working directory for the agent on the remote machine
-    agent_work_dir = "/home/wisccourant/jenkins/agent"
+    agent_work_dir = "/home/wisccourant/jenkins/"
 
     # Step 10: Transfer the private agent key to the remote machine
     gsutil_command = 'sudo gsutil cp gs://kthw-misc/private_agent_key.pem ~/.ssh/private_agent_key.pem'
@@ -93,6 +93,7 @@ def main():
         command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command.format(addr)}'"
         status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
+    """
     # Step 12: Download the Jenkins agent JAR file
     curl_command = f"curl -sO {jenkins_url}jnlpJars/agent.jar"  # Command to download the agent JAR file
     java_command = f"java -jar agent.jar -url {jenkins_url} -secret {secret} -name {node_name} -webSocket -workDir \"{agent_work_dir}\""  # Command to start the Jenkins agent
@@ -104,6 +105,7 @@ def main():
     # Execute the java command to start the agent on the remote machine
     command = f"ssh -i {key_path_b} {username}@{host_b} '{java_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
+    """
 
     # Read the config.xml file
     with open("./config.xml", 'r') as file:
