@@ -35,7 +35,6 @@ def create_ssh_credential(jenkins_url, username, api_token, private_key, credent
     # API URL for creating new credentials
     cred_api_url = f"{jenkins_url}credentials/store/system/domain/_/createCredentials"
 
-
     # JSON Payload to create SSH Username and Private Key Credential
     # Form the payload as a dictionary to be URL-encoded
     # Prepare the form data, including the private key and other fields
@@ -60,7 +59,6 @@ def create_ssh_credential(jenkins_url, username, api_token, private_key, credent
         "Jenkins-Crumb": crumb
     }
 
-
     # Send the POST request to create the SSH credential
     response = requests.post(
         cred_api_url,
@@ -69,6 +67,10 @@ def create_ssh_credential(jenkins_url, username, api_token, private_key, credent
         data=form_data  # Send the URL-encoded data
     )
 
-
     # Return the response object for further handling or error checking
     return response
+
+
+def create_jobs(jenkins: Jenkins, job_name: str, job_cfg):
+    job = jenkins.create_job(job_name, job_cfg)
+    return job

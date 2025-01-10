@@ -47,7 +47,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11f34b5bd40848fb150bcb159ce1de12ad'
+    password = '11fa444ed21323ba39f6695e2acb66bfa9'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -84,7 +84,7 @@ def main():
     # This block iterates through a list of IP addresses and adds them to the SSH known_hosts file
     ip_addresses = [
         "10.240.0.10", "10.240.0.11", "10.240.0.12",
-        "10.240.0.20", "10.240.0.21", "10.240.0.22"
+        "10.240.0.20", "10.240.0.21", "10.240.0.22", "10.240.0.70"
     ]
 
     # Define the command to add an IP address to the known_hosts file
@@ -105,8 +105,11 @@ def main():
     command = f"ssh -i {key_path_b} {username}@{host_b} '{java_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
-    # Step 13: Print "hi" to indicate that the script has completed execution
-    print("hi")
+    # Read the config.xml file
+    with open("./gopython/config.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "install-client-tools", config_xml)
 
 
 # Entry point for the script
