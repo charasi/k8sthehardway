@@ -47,7 +47,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11fa444ed21323ba39f6695e2acb66bfa9'
+    password = '11111fbe5fcfaeb5365b65bdda59d2d71b'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -93,7 +93,7 @@ def main():
         command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command.format(addr)}'"
         status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
-    """
+
     # Step 12: Download the Jenkins agent JAR file
     curl_command = f"curl -sO {jenkins_url}jnlpJars/agent.jar"  # Command to download the agent JAR file
     java_command = f"java -jar agent.jar -url {jenkins_url} -secret {secret} -name {node_name} -webSocket -workDir \"{agent_work_dir}\""  # Command to start the Jenkins agent
@@ -105,7 +105,6 @@ def main():
     # Execute the java command to start the agent on the remote machine
     command = f"ssh -i {key_path_b} {username}@{host_b} '{java_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
-    """
 
     # Read the config.xml file
     with open("./config.xml", 'r') as file:
