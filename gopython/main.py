@@ -106,10 +106,12 @@ def main():
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
     # Read the config.xml file
-    with open("./gopython/config.xml", 'r') as file:
+    with open("./config.xml", 'r') as file:
         config_xml = file.read()
 
     job = jenkins_tasks.create_jobs(jenkins, "install-client-tools", config_xml)
+
+    jenkins.build_job(job.name)
 
 
 # Entry point for the script
