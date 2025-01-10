@@ -26,7 +26,7 @@
         - name: Install CFSSL needed for PKI infrastructure to generate TLS security
           ansible.builtin.get_url:
             url: "https://github.com/cloudflare/cfssl/releases/download/v1.6.5/cfssljson_1.6.5_linux_amd64"
-            dest: /home/wisccourant
+            dest: /home/wisccourant/
             mode: "0600"
           register: cfssljson_output
 
@@ -41,20 +41,20 @@
 
         - name: Set cfssl to executable
           ansible.builtin.file:
-            path: /home/ubuntu/cfssl
+            path: /home/wisccourant/cfssl
             mode: u+x
 
         - name: Set cfssljson to executable
           ansible.builtin.file:
-            path: /home/ubuntu/cfssljson
+            path: /home/wisccourant/cfssljson
             mode: u+x
 
         - name: Move cfssl to bin directory
-          ansible.builtin.command: mv /home/ubuntu/cfssl /usr/local/bin/
+          ansible.builtin.command: mv /home/wisccourant/cfssl /usr/local/bin/
           changed_when: false
 
         - name: Move cfssljson to bin directory
-          ansible.builtin.command: mv /home/ubuntu/cfssljson /usr/local/bin/
+          ansible.builtin.command: mv /home/wisccourant/cfssljson /usr/local/bin/
           changed_when: false
 
         - name: Download kubectl for lab
