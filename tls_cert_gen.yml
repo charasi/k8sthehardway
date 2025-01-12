@@ -1,0 +1,425 @@
+---
+- name: Certificate Authority that can be used to generate additional TLS certificates
+  hosts: k8main
+  remote_user: wisccourant
+  become: true
+
+  tasks:
+    - name: Provision CA and generate TLS Certificates
+      block:
+        - name: Create directory certificates
+          ansible.builtin.file:
+            path: /home/wisccourant/certificates/
+            state: directory
+            mode: "0755"
+
+        - name: Download certificates from gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "gs://kthw-misc/admin-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-config.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kube-proxy-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kubernetes-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-0-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-1-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-2-csr.json", dest: "/home/wisccourant/certificates/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Generate the CA certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+          args:
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/ca-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/ca.pem.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Generate the admin client certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -profile=kubernetes \
+              admin-csr.json | cfssljson -bare admin
+          args:
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/admin-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/admin.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Generate a certificate and private key for each Kubernetes worker node
+          ansible.builtin.shell: |
+            set -o pipefail
+            cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -hostname={{ item.instance }},{{ item.ip }} \
+              -profile=kubernetes \
+              {{ item.instance }}-csr.json | cfssljson -bare {{ item.instance }}
+          args:
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+          register: status
+          loop:
+            - { instance: "worker-0", ip: "10.240.0.20" }
+            - { instance: "worker-1", ip: "10.240.0.21" }
+            - { instance: "worker-2", ip: "10.240.0.22" }
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: Worker nodes private and public key sucessfully created
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Generate the kube-proxy client certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -profile=kubernetes \
+              kube-proxy-csr.json | cfssljson -bare kube-proxy
+          args:
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: kube-proxy client sucessfully created
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create directory certificates
+          ansible.builtin.file:
+            path: /home/wisccourant/certificates/
+            state: directory
+            mode: "0755"
+
+        - name: Download certificates from gcp
+          ansible.builtin.shell: |
+            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/"
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /home/wisccourant/certificates/static_ip.txt
+            chdir: /home/wisccourant/certificates/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Verify that the IP address was retrieved
+          ansible.builtin.assert:
+            that:
+              - kubernetes_public_address.stdout | length > 0  # Ensures the content is not empty
+            msg: "No IP address was retrieved from the file."
+
+        - name: Use the IP address
+          ansible.builtin.debug:
+            msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
+
+        - name: Generate the Kubernetes API Server certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -hostname=10.32.0.10,10.240.0.10,10.240.0.11,10.240.0.12,{{ kubernetes_public_address.stdout }},127.0.0.1,kubernetes.default \
+              -profile=kubernetes \
+              kubernetes-csr.json | cfssljson -bare kubernetes
+          args:
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/kubernetes-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/kubernetes.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Upload worker certificates to gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "/home/wisccourant/certificates/worker-0-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-0.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-1-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-1.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-2-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-2.pem", dest: "gs://kthw-misc/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Upload Kubernetes certificates to gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "/home/wisccourant/certificates/kubernetes-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/kubernetes.pem", dest: "gs://kthw-misc/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set the cluster's API server and other details for kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout }}:6443 \
+              --kubeconfig= {{ item.instanceinstance }}.kubeconfig
+          loop:
+            - { instance: "worker-0" }
+            - { instance: "worker-1" }
+            - { instance: "worker-2" }
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set or modify credentials for a user in the kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config set-credentials system:node:{{ item.instance }} \
+              --client-certificate={{ item.instance }}.pem \
+              --client-key={{ item.instance }}-key.pem \
+              --embed-certs=true \
+              --kubeconfig={{ item.instance }}.kubeconfig
+          loop:
+            - { instance: "worker-0" }
+            - { instance: "worker-1" }
+            - { instance: "worker-2" }
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=system:node:{{ instance }} \
+              --kubeconfig={{ instance }}.kubeconfig
+          loop:
+            - { instance: "worker-0" }
+            - { instance: "worker-1" }
+            - { instance: "worker-2" }
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Switch between different configurations in your kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig={{ item.instance }}.kubeconfig
+          loop:
+            - { instance: "worker-0" }
+            - { instance: "worker-1" }
+            - { instance: "worker-2" }
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Generate a kubeconfig file for the kube-proxy service
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout }}:6443 \
+              --kubeconfig=kube-proxy.kubeconfig
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-credentials kube-proxy \
+              --client-certificate=kube-proxy.pem \
+              --client-key=kube-proxy-key.pem \
+              --embed-certs=true \
+              --kubeconfig=kube-proxy.kubeconfig
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=kube-proxy \
+              --kubeconfig=kube-proxy.kubeconfig
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Switch between different configurations in your kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+          args:
+            chdir: /home/wisccourant/certificates/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Upload kubeconfigs to gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "/home/wisccourant/certificates/worker-0.kubeconfig", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-1.kubeconfig", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/worker-2.kubeconfig", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/kube-proxy.kubeconfig", dest: "gs://kthw-misc/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil uploaded files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0

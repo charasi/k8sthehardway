@@ -18,3 +18,7 @@ output "subnetwork_id" {
 output "master_node_ip" {
   value = google_compute_address.master_node.address
 }
+
+output "static_ip_address" {
+  value = google_compute_address.kubernetes_the_hard_way.address
+}

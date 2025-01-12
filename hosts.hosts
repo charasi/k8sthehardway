@@ -1,5 +1,15 @@
 [all:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
+[k8main]
+k8main ansible_ssh_host=10.240.0.70 ansible_ssh_port=22 ansible_user=wisccourant
+
+[k8workers]
+k8workers ansible_ssh_host=10.240.0.20 ansible_ssh_port=22 ansible_user=wisccourant
+k8workers ansible_ssh_host=10.240.0.21 ansible_ssh_port=22 ansible_user=wisccourant
+k8workers ansible_ssh_host=10.240.0.22 ansible_ssh_port=22 ansible_user=wisccourant
+
 [k8controller]
-k8controller ansible_ssh_host=10.240.0.70 ansible_ssh_port=22 ansible_user=wisccourant
+k8controller ansible_ssh_host=10.240.0.10 ansible_ssh_port=22 ansible_user=wisccourant
+k8controller ansible_ssh_host=10.240.0.11 ansible_ssh_port=22 ansible_user=wisccourant
+k8controller ansible_ssh_host=10.240.0.12 ansible_ssh_port=22 ansible_user=wisccourant

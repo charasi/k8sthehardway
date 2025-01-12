@@ -17,6 +17,7 @@ module "instances" {
   kthw_private_key = module.instances.private_key_pem
   kthw_private_agent_key = module.instances.private_agent_key_pem
   bucket_name = module.buckets.kthw_misc_bucket
+  static_ip_address = module.vpc.static_ip_address
 }
 
 module "buckets" {

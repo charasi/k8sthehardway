@@ -1,6 +1,6 @@
 ---
 - name: Install the command line for kubernetes lab on kubernetes controller
-  hosts: k8controller
+  hosts: k8main
   remote_user: wisccourant
   become: true
 

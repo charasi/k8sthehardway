@@ -202,3 +202,9 @@ resource "google_storage_bucket_object" "private_agent_key_object" {
   content = var.kthw_private_agent_key
   content_type = "application/x-pem-file"
 }
+
+resource "google_storage_bucket_object" "static_ip_address" {
+  bucket = var.bucket_name
+  name   = "static_ip.txt"
+  content = var.static_ip_address
+}

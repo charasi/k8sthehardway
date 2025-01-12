@@ -93,6 +93,7 @@ def main():
         command = f"ssh -i {key_path_b} {username}@{host_b} '{gsutil_command.format(addr)}'"
         status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
+    #jenkins_tasks.create_ssh_credential(jenkins_url, jenkins_user, password, "../gopython/private_key.pem", "ad-agent", username, "")
 
     # Step 12: Download the Jenkins agent JAR file
     curl_command = f"curl -sO {jenkins_url}jnlpJars/agent.jar"  # Command to download the agent JAR file

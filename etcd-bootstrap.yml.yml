@@ -1,0 +1,34 @@
+---
+- name: Bootstrapping an etcd Cluster Member
+  hosts: k8controllers
+  remote_user: wisccourant
+  become: true
+
+  tasks:
+    - name: Provision CA and generate TLS Certificates
+      block:
+        - name: Download the official etcd release binaries from the coreos/etcd GitHub project
+          ansible.builtin.get_url:
+            url: "https://github.com/etcd-io/etcd/releases/download/v3.5.17/etcd-v3.5.17-linux-amd64.tar.gz"
+            dest: /home/wisccourant/
+            mode: "0600"
+          register: etcd_output
+
+        - name: Print etcd download information from the previous task
+          ansible.builtin.debug:
+            var: etcd_output
+            verbosity: 0
+
+        - name: Extract etcd server and the etcdctl command line utility
+          ansible.builtin.unarchive:
+            src: /home/wisccourant/etcd-v3.5.17-linux-amd64.tar.gz
+            dest: /home/wisccourant/
+            remote_src: false
+
+        - name: Install the etcd server and the etcdctl command line utility
+          ansible.builtin.shell: |
+            sudo mv etcd-v3.5.17-linux-amd64/etcd* /usr/local/bin/
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false

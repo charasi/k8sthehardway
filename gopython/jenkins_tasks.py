@@ -23,18 +23,10 @@ def create_ssh_credential(jenkins_url, username, api_token, private_key, credent
     with open(private_key, 'r') as key_file:
         private_key_content = key_file.read()
 
-    crumb_url = f"{jenkins_url}/crumbIssuer/api/json"
-    response = requests.get(crumb_url, auth=HTTPBasicAuth(username, api_token))
-
-    if response.status_code == 200:
-        crumb = response.json()
-        crumb = crumb['crumb']
-    else:
-        raise Exception(f"Failed to get CSRF crumb. Status Code: {response.status_code}, Response: {response.text}")
-
     # API URL for creating new credentials
     cred_api_url = f"{jenkins_url}credentials/store/system/domain/_/createCredentials"
 
+    """
     # JSON Payload to create SSH Username and Private Key Credential
     # Form the payload as a dictionary to be URL-encoded
     # Prepare the form data, including the private key and other fields
@@ -43,29 +35,46 @@ def create_ssh_credential(jenkins_url, username, api_token, private_key, credent
         "credentials.scope": "GLOBAL",  # Scope can be GLOBAL or SYSTEM
         "credentials.id": credential_id,  # Unique ID for the credential
         "credentials.username": ssh_username,  # SSH username
-        "credentials.privateKeySource.stapler-class": "com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource",
+        "credentials.privateKeySource.stapler-class": "hudson.plugins.sshslaves.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource",
         "credentials.privateKeySource.privateKey": private_key_content,  # The SSH private key content
         "credentials.description": description,  # Optional description
-        "credentials.stapler-class": "com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey",
-        "credentials.$class": "com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey"
     }
 
-    # URL-encode the data for submission
-    #encoded_data = urllib.parse.urlencode(form_data)
-
-    # Headers for form-encoded data
+    # Headers for the form submission
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Jenkins-Crumb": crumb
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    headers = {
+        "Content-Type": "application/xml"
+    }
+    """
+
+
+    # Create the form data (the payload to be sent as form submission)
+    form_data = {
+        "json": json.dumps({
+            "credentials": {
+                "scope": "GLOBAL",
+                "id": credential_id,
+                "username": ssh_username,
+                "privateKeySource": {
+                    "class": "hudson.plugins.sshslaves.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource",
+                    "privateKey": private_key
+                },
+                "description": description
+            }
+        })
+    }
+
+    # Define headers for the form submission
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
     }
 
     # Send the POST request to create the SSH credential
-    response = requests.post(
-        cred_api_url,
-        auth=HTTPBasicAuth(username, api_token),
-        headers=headers,
-        data=form_data  # Send the URL-encoded data
-    )
+    response = requests.post(cred_api_url, data=form_data, auth=HTTPBasicAuth(username, api_token), headers=headers)
+
 
     # Return the response object for further handling or error checking
     return response

@@ -73,3 +73,7 @@ variable "kthw_private_agent_key" {
   type = string
   sensitive = true
 }
+
+variable "static_ip_address" {
+  type = string
+}
