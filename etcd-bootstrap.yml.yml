@@ -32,3 +32,204 @@
             chdir: /home/wisccourant/
           register: status
           changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Retrieve the internal IP address for the current compute instance
+          ansible.builtin.shell: |
+            INTERNAL_IP=$(curl -s -H "Metadata-Flavor: Google" \
+              http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set the etcd name to match the hostname of the current compute instance
+          ansible.builtin.shell: |
+            ETCD_NAME=$(hostname -s)
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set the etcd name to match the hostname of the current compute instance
+          ansible.builtin.shell: |
+            ETCD_NAME=$(hostname -s)
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Created directories
+          ansible.builtin.shell: |
+            sudo mkdir -p /etc/etcd /var/lib/etcd
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Download certificates from gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the etcd.service systemd unit file
+          ansible.builtin.shell: |
+            cat > etcd.service <<EOF
+            [Unit]
+            Description=etcd
+            Documentation=https://github.com/coreos
+
+            [Service]
+            ExecStart=/usr/local/bin/etcd \\
+              --name ${ETCD_NAME} \\
+              --cert-file=/etc/etcd/kubernetes.pem \\
+              --key-file=/etc/etcd/kubernetes-key.pem \\
+              --peer-cert-file=/etc/etcd/kubernetes.pem \\
+              --peer-key-file=/etc/etcd/kubernetes-key.pem \\
+              --trusted-ca-file=/etc/etcd/ca.pem \\
+              --peer-trusted-ca-file=/etc/etcd/ca.pem \\
+              --peer-client-cert-auth \\
+              --client-cert-auth \\
+              --initial-advertise-peer-urls https://${INTERNAL_IP}:2380 \\
+              --listen-peer-urls https://${INTERNAL_IP}:2380 \\
+              --listen-client-urls https://${INTERNAL_IP}:2379,http://127.0.0.1:2379 \\
+              --advertise-client-urls https://${INTERNAL_IP}:2379 \\
+              --initial-cluster-token etcd-cluster-0 \\
+              --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380,controller-2=https://10.240.0.12:2380 \\
+              --initial-cluster-state new \\
+              --data-dir=/var/lib/etcd
+            Restart=on-failure
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Move the etcd.service file you created into the /etc/systemd/system/ directory
+          ansible.builtin.shell: |
+            sudo mv etcd.service /etc/systemd/system/
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Reload systemd's configuration
+          ansible.builtin.shell: |
+            sudo systemctl daemon-reload
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Enable the etcd service
+          ansible.builtin.shell: |
+            sudo systemctl enable etcd
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Start the etcd Server
+          ansible.builtin.shell: |
+            sudo systemctl start etcd
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: List the etcd cluster members
+          ansible.builtin.shell: |
+            ETCDCTL_API=3 etcdctl member list
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
