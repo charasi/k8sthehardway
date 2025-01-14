@@ -1,4 +1,6 @@
 import os
+import time
+
 import requests
 import xml.etree.ElementTree as ET
 from jenkinsapi.jenkins import Jenkins
@@ -114,6 +116,94 @@ def main():
     job = jenkins_tasks.create_jobs(jenkins, "install-k8", config_xml)
 
     jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./certificates.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-certificates", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./etcd.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-etcd", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./controllers.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-controllers", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./workers.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-workers", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./kubectl.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-kubectl", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
 
 
 # Entry point for the script

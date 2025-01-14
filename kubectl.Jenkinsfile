@@ -5,16 +5,16 @@ pipeline {
         ANSIBLE_PRIVATE_KEY = credentials('admin-agent')
     }
     stages {
-        stage('Run client_tools.yml') {
+        stage('Run kubectl-access.yml') {
             steps {
                 script {
-                    // Run the first playbook
-                    def result = sh(script: "ansible-playbook -i hosts.hosts --private-key=$ANSIBLE_PRIVATE_KEY client_tools.yml", returnStatus: true)
+                    // Run another playbook
+                    def result = sh(script: "ansible-playbook -i hosts.hosts --private-key=$ANSIBLE_PRIVATE_KEY kubectl-access.yml", returnStatus: true)
 
-                    // Check if the first playbook ran successfully
+                    // Check if the third playbook ran successfully
                     if (result != 0) {
                         currentBuild.result = 'FAILURE'
-                        error "client_tools.yml failed, skipping the next playbook."
+                        error "kubectl-access.yml failed."
                     }
                 }
             }
