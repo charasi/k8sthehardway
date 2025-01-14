@@ -1,0 +1,14 @@
+pipeline {
+agent { label 'kthw-agent' }
+environment {
+        JENKINS_NODE_COOKIE='do_not_kill'
+        ANSIBLE_PRIVATE_KEY=credentials('admin-agent') 
+    }
+  stages {
+    stage('Hello') {
+      steps {
+        sh 'ansible-playbook -i hosts.hosts --private-key=$ANSIBLE_PRIVATE_KEY client_tools.yml'
+      }
+    }
+  }
+}

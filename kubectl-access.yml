@@ -132,3 +132,27 @@
           ansible.builtin.debug:
             var: output
             verbosity: 0
+
+        - name: Deploy the kube-dns cluster add-on
+          ansible.builtin.command:
+            cmd: kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
+            chdir: /home/wisccourant/certificates/
+          register: output
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: List the pods created by the kube-dns deployment
+          ansible.builtin.command:
+            cmd: kubectl get pods -l k8s-app=kube-dns -n kube-system
+            chdir: /home/wisccourant/certificates/
+          register: output
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
