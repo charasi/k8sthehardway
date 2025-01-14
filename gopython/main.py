@@ -111,7 +111,7 @@ def main():
     with open("./config.xml", 'r') as file:
         config_xml = file.read()
 
-    job = jenkins_tasks.create_jobs(jenkins, "install-client-tools", config_xml)
+    job = jenkins_tasks.create_jobs(jenkins, "install-k8", config_xml)
 
     jenkins.build_job(job.name)
 

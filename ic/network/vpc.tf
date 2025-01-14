@@ -102,6 +102,7 @@ resource "google_compute_route" "worker_route_0" {
   network            = google_compute_network.kthw_network.name
   dest_range  = "10.200.0.0/24"
   next_hop_ip   = "10.240.0.20"  # Internal IP of worker-0
+  depends_on = [google_compute_subnetwork.kthw-network-us-west1-subnet]
 }
 
 resource "google_compute_route" "worker_route_1" {
@@ -109,6 +110,7 @@ resource "google_compute_route" "worker_route_1" {
   network            = google_compute_network.kthw_network.name
   dest_range  = "10.200.1.0/24"
   next_hop_ip   = "10.240.0.21"  # Internal IP of worker-1
+  depends_on = [google_compute_subnetwork.kthw-network-us-west1-subnet]
 }
 
 resource "google_compute_route" "worker_route_2" {
@@ -116,4 +118,5 @@ resource "google_compute_route" "worker_route_2" {
   network            = google_compute_network.kthw_network.name
   dest_range  = "10.200.2.0/24"
   next_hop_ip   = "10.240.0.22"  # Internal IP of worker-2
+  depends_on = [google_compute_subnetwork.kthw-network-us-west1-subnet]
 }
