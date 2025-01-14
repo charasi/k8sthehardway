@@ -15,7 +15,7 @@
 
         - name: Download certificates from gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            "sudo gsutil cp {{ item.source }} {{ item.dest }}"
           loop:
             - { source: "gs://kthw-misc/admin-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/ca-config.json", dest: "/home/wisccourant/certificates/" }
