@@ -113,6 +113,7 @@ def main():
     with open("./config.xml", 'r') as file:
         config_xml = file.read()
 
+    """
     job = jenkins_tasks.create_jobs(jenkins, "install-k8", config_xml)
 
     jenkins.build_job(job.name)
@@ -124,7 +125,7 @@ def main():
     if job.get_last_build().get_status() != 'SUCCESS':
         print(f"Build {job.build_id} did not pass.")
         exit(1)
-
+    """
     # Read the config.xml file
     with open("./certificates.xml", 'r') as file:
         config_xml = file.read()
