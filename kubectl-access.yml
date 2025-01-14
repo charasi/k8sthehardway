@@ -1,0 +1,134 @@
+---
+- name: Configuring kubectl for Remote Access
+  hosts: k8main
+  remote_user: wisccourant
+  become: true
+
+  tasks:
+    - name: The Admin Kubernetes Configuration File
+      block:
+        - name: Retrieve the kubernetes-the-hard-way static IP address
+          ansible.builtin.shell: |
+            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/"
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /home/wisccourant/certificates/static_ip.txt
+            chdir: /home/wisccourant/certificates/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Configure kubectl to be able to connect to the Kubernetes cluster
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address }}:6443
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Generate a kubeconfig file suitable for authenticating as the admin user
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address }}:6443
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set credentials for a user in the kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config set-credentials admin \
+              --client-certificate=admin.pem \
+              --client-key=admin-key.pem
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create or modify a context in your kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config set-context kubernetes-the-hard-way \
+              --cluster=kubernetes-the-hard-way \
+              --user=admin
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Set the active context for Kubernetes cluster configuration
+          ansible.builtin.shell: |
+            kubectl config use-context kubernetes-the-hard-way
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Check the health of the remote Kubernetes cluster
+          ansible.builtin.command:
+            cmd: kubectl get componentstatuses
+            chdir: /home/wisccourant/certificates/
+          register: output
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: List the nodes in the remote Kubernetes cluster
+          ansible.builtin.command:
+            cmd: kubectl get nodes
+            chdir: /home/wisccourant/certificates/
+          register: output
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0

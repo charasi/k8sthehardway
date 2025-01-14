@@ -1,0 +1,374 @@
+---
+- name: Bootstrapping the Kubernetes Control Plane
+  hosts: k8controllers
+  remote_user: wisccourant
+  become: true
+
+  tasks:
+    - name: Provision the Kubernetes Control Plane
+      block:
+        - name: Download the Kubernetes Controller Binaries
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-apiserver"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print cfssl information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download the Kubernetes Controller Binaries
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-controller-manager"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print cfssl information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download the Kubernetes Controller Binaries
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-scheduler"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print cfssl information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download the Kubernetes Controller Binaries
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print cfssl information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Make binaries executable
+          ansible.builtin.command:
+            cmd: chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Move binaries to bin directory
+          ansible.builtin.command:
+            cmd: sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Configure the Kubernetes API Server
+          ansible.builtin.command:
+            cmd: sudo mkdir -p /var/lib/kubernetes/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Download certificates from gcp
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Retrieve the internal IP address for the current compute instance
+          ansible.builtin.shell: |
+            INTERNAL_IP=$(curl -s -H "Metadata-Flavor: Google" \
+              http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the kube-apiserver.service systemd unit file
+          ansible.builtin.shell: |
+            cat > kube-apiserver.service <<EOF
+              [Unit]
+              Description=Kubernetes API Server
+              Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+              [Service]
+              ExecStart=/usr/local/bin/kube-apiserver \\
+                --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
+                --advertise-address=${INTERNAL_IP} \\
+                --allow-privileged=true \\
+                --apiserver-count=3 \\
+                --audit-log-maxage=30 \\
+                --audit-log-maxbackup=3 \\
+                --audit-log-maxsize=100 \\
+                --audit-log-path=/var/log/audit.log \\
+                --authorization-mode=Node,RBAC \\
+                --bind-address=0.0.0.0 \\
+                --client-ca-file=/var/lib/kubernetes/ca.pem \\
+                --enable-swagger-ui=true \\
+                --etcd-cafile=/var/lib/kubernetes/ca.pem \\
+                --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\
+                --etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \\
+                --etcd-servers=https://10.240.0.10:2379,https://10.240.0.11:2379,https://10.240.0.12:2379 \\
+                --event-ttl=1h \\
+                --experimental-encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml \\
+                --insecure-bind-address=127.0.0.1 \\
+                --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \\
+                --kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem \\
+                --kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem \\
+                --kubelet-https=true \\
+                --runtime-config=api/all \\
+                --service-account-key-file=/var/lib/kubernetes/ca-key.pem \\
+                --service-cluster-ip-range=10.32.0.0/24 \\
+                --service-node-port-range=30000-32767 \\
+                --tls-ca-file=/var/lib/kubernetes/ca.pem \\
+                --tls-cert-file=/var/lib/kubernetes/kubernetes.pem \\
+                --tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem \\
+                --v=2
+              Restart=on-failure
+              RestartSec=5
+
+              [Install]
+              WantedBy=multi-user.target
+              EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the kube-controller-manager.service systemd unit file
+          ansible.builtin.shell: |
+            cat > kube-controller-manager.service <<EOF
+            [Unit]
+            Description=Kubernetes Controller Manager
+            Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+            [Service]
+            ExecStart=/usr/local/bin/kube-controller-manager \\
+              --address=0.0.0.0 \\
+              --cluster-cidr=10.200.0.0/16 \\
+              --cluster-name=kubernetes \\
+              --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
+              --cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \\
+              --leader-elect=true \\
+              --master=http://127.0.0.1:8080 \\
+              --root-ca-file=/var/lib/kubernetes/ca.pem \\
+              --service-account-private-key-file=/var/lib/kubernetes/ca-key.pem \\
+              --service-cluster-ip-range=10.32.0.0/24 \\
+              --v=2
+            Restart=on-failure
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the kube-scheduler.service systemd unit file
+          ansible.builtin.shell: |
+            cat > kube-scheduler.service <<EOF
+            [Unit]
+            Description=Kubernetes Scheduler
+            Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+            [Service]
+            ExecStart=/usr/local/bin/kube-scheduler \\
+              --leader-elect=true \\
+              --master=http://127.0.0.1:8080 \\
+              --v=2
+            Restart=on-failure
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Move the three service unit files to the /etc/systemd/system/ directory
+          ansible.builtin.command:
+            cmd: sudo mv kube-apiserver.service kube-scheduler.service kube-controller-manager.service /etc/systemd/system/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Reload daemon
+          ansible.builtin.command:
+            cmd: sudo systemctl daemon-reload
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Enable kube-apiserver, kube-controller-manager, and kube-scheduler
+          ansible.builtin.command:
+            cmd: sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Start the controller Services
+          ansible.builtin.command:
+            cmd: sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Verify services are running
+          ansible.builtin.command:
+            cmd: kubectl get componentstatuses
+            chdir: /home/wisccourant/
+          register: output
+          changed_when: false
+
+        - name: Get output
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Pause for 30 seconds
+          ansible.builtin.pause:
+            seconds: 10
+
+        - name: Create the system:kube-apiserver-to-kubelet ClusterRole
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1beta1
+            kind: ClusterRole
+            metadata:
+              annotations:
+                rbac.authorization.kubernetes.io/autoupdate: "true"
+              labels:
+                kubernetes.io/bootstrapping: rbac-defaults
+              name: system:kube-apiserver-to-kubelet
+            rules:
+              - apiGroups:
+                  - ""
+                resources:
+                  - nodes/proxy
+                  - nodes/stats
+                  - nodes/log
+                  - nodes/spec
+                  - nodes/metrics
+                verbs:
+                  - "*"
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to the kubernetes user
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1beta1
+            kind: ClusterRoleBinding
+            metadata:
+              name: system:kube-apiserver
+              namespace: ""
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:kube-apiserver-to-kubelet
+            subjects:
+              - apiGroup: rbac.authorization.k8s.io
+                kind: User
+                name: kubernetes
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Download static ip text file from gcp
+          ansible.builtin.shell: |
+            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/"
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /home/wisccourant/static_ip.txt
+            chdir: /home/wisccourant/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Make a HTTP request for the Kubernetes version info
+          ansible.builtin.shell: |
+            curl --cacert ca.pem https://{{ kubernetes_public_address.stdout }}:6443/version
+          changed_when: false
+          register: status
+          tags:
+            - skip_ansible_lint
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0

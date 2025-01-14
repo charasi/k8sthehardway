@@ -1,0 +1,277 @@
+---
+- name: Bootstrapping the Kubernetes Worker Nodes
+  hosts: k8workers
+  remote_user: wisccourant
+  become: true
+
+  tasks:
+    - name: Provision a Kubernetes Worker Node
+      block:
+        - name: Install the OS dependencies
+          ansible.builtin.command:
+            cmd: sudo apt-get -y install socat
+          changed_when: false
+
+        - name: Download cni plugins
+          ansible.builtin.get_url:
+            url: "https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download cri-containerd
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/cri-containerd-release/cri-containerd-1.1.0-rc.1.linux-amd64.tar.gz"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download kubectl
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download kube-proxy
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-proxy"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download kubelet
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubelet"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Create the installation directories
+          ansible.builtin.shell: |
+            sudo mkdir -p \
+              /etc/cni/net.d \
+              /opt/cni/bin \
+              /var/lib/kubelet \
+              /var/lib/kube-proxy \
+              /var/lib/kubernetes \
+              /var/run/kubernetes
+          changed_when: false
+
+        - name: Extract the CNI plugins for Kubernetes
+          ansible.builtin.command:
+            cmd: sudo tar -xvf cni-plugins-linux-amd64-v1.6.2.tgz -C /opt/cni/bin/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Extract and place in root directory
+          ansible.builtin.command:
+            cmd: sudo tar -xvf cri-containerd-1.1.0-rc.1.linux-amd64.tar.gz -C /
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Make Kubernetes binaries executable
+          ansible.builtin.command:
+            cmd: chmod +x kubectl kube-proxy kubelet
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Move (kubectl, kube-proxy, and kubelet) to the /usr/local/bin/ directory
+          ansible.builtin.command:
+            cmd: sudo mv kubectl kube-proxy kubelet /usr/local/bin/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Download certificates from gcp
+          ansible.builtin.shell: |
+            POD_CIDR=$(curl -s -H "Metadata-Flavor: Google" \
+              http://metadata.google.internal/computeMetadata/v1/instance/attributes/pod-cidr)
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the bridge network configuration file
+          ansible.builtin.shell: |
+            cat > 10-bridge.conf <<EOF
+            {
+                "cniVersion": "0.3.1",
+                "name": "bridge",
+                "type": "bridge",
+                "bridge": "cnio0",
+                "isGateway": true,
+                "ipMasq": true,
+                "ipam": {
+                    "type": "host-local",
+                    "ranges": [
+                      [{"subnet": "${POD_CIDR}"}]
+                    ],
+                    "routes": [{"dst": "0.0.0.0/0"}]
+                }
+            }
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the loopback network configuration file
+          ansible.builtin.shell: |
+            cat > 99-loopback.conf <<EOF
+            {
+                "cniVersion": "0.3.1",
+                "type": "loopback"
+            }
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Move the network configuration files to the CNI configuration directory
+          ansible.builtin.command:
+            cmd: sudo mv 10-bridge.conf 99-loopback.conf /etc/cni/net.d/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Download from gcp and Configure the Kubelet
+          ansible.builtin.shell: |
+            "gsutil cp {{ item.source }} {{ item.dest }}"
+          loop:
+            - { source: "gs://kthw-misc/${HOSTNAME}-key.pem", dest: "/var/lib/kubelet/" }
+            - { source: "gs://kthw-misc/${HOSTNAME}.pem", dest: "/var/lib/kubelet/" }
+            - { source: "gs://kthw-misc/${HOSTNAME}.kubeconfig", dest: "/var/lib/kubelet/kubeconfig" }
+            - { source: "gs://kthw-misc/ca.pem", dest: "/var/lib/kubernetes/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: gsutil copied files sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Create the kubelet.service systemd unit file
+          ansible.builtin.shell: |
+            cat > kubelet.service <<EOF
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+            After=cri-containerd.service
+            Requires=cri-containerd.service
+
+            [Service]
+            ExecStart=/usr/local/bin/kubelet \\
+              --allow-privileged=true \\
+              --anonymous-auth=false \\
+              --authorization-mode=Webhook \\
+              --client-ca-file=/var/lib/kubernetes/ca.pem \\
+              --cluster-dns=10.32.0.10 \\
+              --cluster-domain=cluster.local \\
+              --container-runtime=remote \\
+              --container-runtime-endpoint=unix:///var/run/cri-containerd.sock \\
+              --image-pull-progress-deadline=2m \\
+              --kubeconfig=/var/lib/kubelet/kubeconfig \\
+              --network-plugin=cni \\
+              --pod-cidr=${POD_CIDR} \\
+              --register-node=true \\
+              --require-kubeconfig \\
+              --runtime-request-timeout=15m \\
+              --tls-cert-file=/var/lib/kubelet/${HOSTNAME}.pem \\
+              --tls-private-key-file=/var/lib/kubelet/${HOSTNAME}-key.pem \\
+              --v=2
+            Restart=on-failure
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            msg: cmd process sucessfully
+            var: status
+            verbosity: 0
+          when: status.rc == 0
+
+        - name: Move the kubelet.service and kube-proxy.service files to /etc/systemd/system/
+          ansible.builtin.command:
+            cmd: sudo mv kubelet.service kube-proxy.service /etc/systemd/system/
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Daemon-reload
+          ansible.builtin.command:
+            cmd: sudo systemctl daemon-reload
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Enable
+          ansible.builtin.command:
+            cmd: sudo systemctl enable containerd cri-containerd kubelet kube-proxy
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Start the Worker Services
+          ansible.builtin.command:
+            cmd: sudo systemctl start containerd cri-containerd kubelet kube-proxy
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Start the Worker Services
+          ansible.builtin.command:
+            cmd: kubectl get nodes
+            chdir: /home/wisccourant/
+          register: output
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0

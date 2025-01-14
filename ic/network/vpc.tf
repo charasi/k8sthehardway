@@ -96,3 +96,24 @@ resource "google_compute_router_nat" "kthw_nat" {
     filter = "ERRORS_ONLY"
   }
 }
+
+resource "google_compute_route" "worker_route_0" {
+  name               = "kubernetes-route-10-200-0-0-24"
+  network            = google_compute_network.kthw_network.name
+  dest_range  = "10.200.0.0/24"
+  next_hop_address   = "10.240.0.20"  # Internal IP of worker-0
+}
+
+resource "google_compute_route" "worker_route_1" {
+  name               = "kubernetes-route-10-200-1-0-24"
+  network            = google_compute_network.kthw_network.name
+  dest_range  = "10.200.1.0/24"
+  next_hop_address   = "10.240.0.21"  # Internal IP of worker-1
+}
+
+resource "google_compute_route" "worker_route_2" {
+  name               = "kubernetes-route-10-200-2-0-24"
+  network            = google_compute_network.kthw_network.name
+  dest_range  = "10.200.2.0/24"
+  next_hop_address   = "10.240.0.22"  # Internal IP of worker-2
+}

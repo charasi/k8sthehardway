@@ -23,3 +23,16 @@ output "public_agent_key_openssh" {
   value = tls_private_key.kthw_ssh_agent.public_key_openssh
 }
  */
+
+# Optional, to reference a specific controller
+output "controller_0_self_link" {
+  value = google_compute_instance.controllers[0].self_link
+}
+
+output "controller_1_self_link" {
+  value = google_compute_instance.controllers[1].self_link
+}
+
+output "controller_2_self_link" {
+  value = google_compute_instance.controllers[2].self_link
+}
