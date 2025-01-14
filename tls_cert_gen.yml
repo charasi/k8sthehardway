@@ -17,14 +17,14 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/admin-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/ca-config.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/ca-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/kube-proxy-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/kubernetes-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-0-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-1-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-2-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/admin-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-config", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kube-proxy-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kubernetes-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-0-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-1-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-2-csr", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
 
@@ -150,7 +150,7 @@
 
         - name: Download certificates from gcp
           ansible.builtin.shell: |
-            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/"
+            sudo gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/
           changed_when: false
           register: status
 
@@ -214,7 +214,7 @@
 
         - name: Upload worker certificates to gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "/home/wisccourant/certificates/worker-0-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/worker-0.pem", dest: "gs://kthw-misc/" }
@@ -234,7 +234,7 @@
 
         - name: Upload Kubernetes certificates to gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "/home/wisccourant/certificates/kubernetes-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/kubernetes.pem", dest: "gs://kthw-misc/" }
@@ -289,7 +289,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -311,7 +311,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -330,7 +330,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -349,7 +349,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -368,7 +368,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -386,7 +386,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
@@ -401,14 +401,14 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
 
         - name: Upload kubeconfigs to gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "/home/wisccourant/certificates/worker-0.kubeconfig", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/worker-1.kubeconfig", dest: "gs://kthw-misc/" }
@@ -419,7 +419,7 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
+            msg: cmd process sucessfully
             var: status
             verbosity: 0
           when: status.rc == 0
