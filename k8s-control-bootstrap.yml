@@ -78,7 +78,7 @@
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "gs://kthw-misc/ca.pem", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/ca-key", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/ca-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kubernetes.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
