@@ -110,7 +110,7 @@
               [Service]
               ExecStart=/usr/local/bin/kube-apiserver \\
                 --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
-                --advertise-address={{ ip_address.stdout }} \\
+                --advertise-address={{ ip_address.stdout | trim }} \\
                 --allow-privileged=true \\
                 --apiserver-count=3 \\
                 --audit-log-maxage=30 \\
