@@ -31,8 +31,9 @@
         - name: Generate the CA certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
-            sudo cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+            sudo cfssl gencert -initca ca-csr.json | sudo cfssljson -bare ca
           args:
+            executable: /bin/bash
             chdir: /home/wisccourant/certificates/
           changed_when: false
 
@@ -64,8 +65,9 @@
               -ca-key=ca-key.pem \
               -config=ca-config.json \
               -profile=kubernetes \
-              admin-csr.json | cfssljson -bare admin
+              admin-csr.json | sudo cfssljson -bare admin
           args:
+            executable: /bin/bash
             chdir: /home/wisccourant/certificates/
           changed_when: false
 
@@ -98,8 +100,9 @@
               -config=ca-config.json \
               -hostname={{ item.instance }},{{ item.ip }} \
               -profile=kubernetes \
-              {{ item.instance }}-csr.json | cfssljson -bare {{ item.instance }}
+              {{ item.instance }}-csr.json | sudo cfssljson -bare {{ item.instance }}
           args:
+            executable: /bin/bash
             chdir: /home/wisccourant/certificates/
           changed_when: false
           register: status
@@ -121,8 +124,9 @@
               -ca-key=ca-key.pem \
               -config=ca-config.json \
               -profile=kubernetes \
-              kube-proxy-csr.json | cfssljson -bare kube-proxy
+              kube-proxy-csr.json | sudo cfssljson -bare kube-proxy
           args:
+            executable: /bin/bash
             chdir: /home/wisccourant/certificates/
           changed_when: false
 
@@ -174,8 +178,9 @@
               -config=ca-config.json \
               -hostname=10.32.0.10,10.240.0.10,10.240.0.11,10.240.0.12,{{ kubernetes_public_address.stdout }},127.0.0.1,kubernetes.default \
               -profile=kubernetes \
-              kubernetes-csr.json | cfssljson -bare kubernetes
+              kubernetes-csr.json | sudo cfssljson -bare kubernetes
           args:
+            executable: /bin/bash
             chdir: /home/wisccourant/certificates/
           changed_when: false
 

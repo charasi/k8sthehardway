@@ -109,6 +109,7 @@ def main():
     command = f"ssh -i {key_path_b} {username}@{host_b} '{java_command}'"
     status = ssh_tasks.process_ssh_task(ip_addr, key_path, username, command)
 
+    """""
     # Read the config.xml file
     with open("./config.xml", 'r') as file:
         config_xml = file.read()
@@ -124,6 +125,7 @@ def main():
     if job.get_last_build().get_status() != 'SUCCESS':
         print(f"Build {job.build_id} did not pass.")
         exit(1)
+    """
 
     # Read the config.xml file
     with open("./certificates.xml", 'r') as file:
