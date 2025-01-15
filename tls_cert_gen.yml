@@ -282,7 +282,7 @@
           ansible.builtin.shell: |
             kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
-              --user=system:node:{{ instance }} \
+              --user=system:node:{{ item.instance }} \
               --kubeconfig={{ item.instance }}.kubeconfig
           loop:
             - { instance: "worker-0" }
