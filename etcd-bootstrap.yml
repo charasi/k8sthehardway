@@ -40,13 +40,13 @@
 
         - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.command:
-            cmd: hostname -I | awk '{print $1}
+            cmd: "hostname -I | awk '{print $1}"
           register: ip_address
           changed_when: false
 
         - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.command:
-            cmd: hostname
+            cmd: "hostname"
           register: host_name
           changed_when: false
 

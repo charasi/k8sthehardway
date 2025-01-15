@@ -386,6 +386,8 @@
             - { source: "/home/wisccourant/certificates/worker-1.kubeconfig", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/worker-2.kubeconfig", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/kube-proxy.kubeconfig", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/ca.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/ca-key.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 
