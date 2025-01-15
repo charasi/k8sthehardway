@@ -17,21 +17,21 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/admin-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/ca-config", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/ca-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/kube-proxy-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/kubernetes-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-0-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-1-csr", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/worker-2-csr", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/admin-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-config.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kube-proxy-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/kubernetes-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-0-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-1-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/worker-2-csr.json", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
 
         - name: Generate the CA certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
-            cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+            sudo cfssl gencert -initca ca-csr.json | cfssljson -bare ca
           args:
             chdir: /home/wisccourant/certificates/
           changed_when: false
@@ -92,7 +92,7 @@
         - name: Generate a certificate and private key for each Kubernetes worker node
           ansible.builtin.shell: |
             set -o pipefail
-            cfssl gencert \
+            sudo cfssl gencert \
               -ca=ca.pem \
               -ca-key=ca-key.pem \
               -config=ca-config.json \
@@ -116,7 +116,7 @@
         - name: Generate the kube-proxy client certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
-            cfssl gencert \
+            sudo cfssl gencert \
               -ca=ca.pem \
               -ca-key=ca-key.pem \
               -config=ca-config.json \
@@ -168,7 +168,7 @@
         - name: Generate the Kubernetes API Server certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
-            cfssl gencert \
+            sudo cfssl gencert \
               -ca=ca.pem \
               -ca-key=ca-key.pem \
               -config=ca-config.json \
