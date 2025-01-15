@@ -87,7 +87,7 @@
 
             [Service]
             ExecStart=/usr/local/bin/etcd \\
-              --name {{ hostname.stdout }} \\
+              --name {{ host_name.stdout }} \\
               --cert-file=/etc/etcd/kubernetes.pem \\
               --key-file=/etc/etcd/kubernetes-key.pem \\
               --peer-cert-file=/etc/etcd/kubernetes.pem \\
