@@ -77,9 +77,10 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/ca.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/ca-key", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
@@ -88,18 +89,15 @@
             var: status
             verbosity: 0
 
-        - name: Retrieve the internal IP address for the current compute instance
-          ansible.builtin.shell: |
-            INTERNAL_IP=$(curl -s -H "Metadata-Flavor: Google" \
-              http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)
-          args:
-            chdir: /home/wisccourant/
-          register: status
+        - name: Get the main IP address
+          ansible.builtin.command:
+            cmd: hostname -I
+          register: ip_address
           changed_when: false
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            var: status
+            var: ip_address
             verbosity: 0
 
         - name: Create the kube-apiserver.service systemd unit file
@@ -112,7 +110,7 @@
               [Service]
               ExecStart=/usr/local/bin/kube-apiserver \\
                 --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
-                --advertise-address=${INTERNAL_IP} \\
+                --advertise-address={{ ip_address.stdout }} \\
                 --allow-privileged=true \\
                 --apiserver-count=3 \\
                 --audit-log-maxage=30 \\
