@@ -242,7 +242,7 @@
               --certificate-authority=ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address.stdout }}:6443 \
-              --kubeconfig= {{ item.instance }}.kubeconfig
+              --kubeconfig={{ item.instance }}.kubeconfig
           loop:
             - { instance: "worker-0" }
             - { instance: "worker-1" }
