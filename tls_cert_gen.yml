@@ -28,11 +28,6 @@
           changed_when: false
           register: status
 
-        - name: Verify cmd process sucessfully
-          ansible.builtin.debug:
-            var: status
-            verbosity: 0
-
         - name: Generate the CA certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
@@ -64,7 +59,7 @@
         - name: Generate the admin client certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
-            cfssl gencert \
+            sudo cfssl gencert \
               -ca=ca.pem \
               -ca-key=ca-key.pem \
               -config=ca-config.json \
