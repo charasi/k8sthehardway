@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '114822270f75b0afe8184ae5228a15c235'
+    password = '11005a19ea9a35f6ae264e77468e3ac4cc'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
