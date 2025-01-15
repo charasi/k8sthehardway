@@ -23,7 +23,7 @@
           ansible.builtin.unarchive:
             src: /home/wisccourant/etcd-v3.5.17-linux-amd64.tar.gz
             dest: /home/wisccourant/
-            remote_src: false
+            remote_src: true
 
         - name: Install the etcd server and the etcdctl command line utility
           ansible.builtin.shell: |
