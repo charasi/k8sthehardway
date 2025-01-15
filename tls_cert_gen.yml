@@ -30,10 +30,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Generate the CA certificate and private key
           ansible.builtin.shell: |
@@ -51,7 +49,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -61,7 +59,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Generate the admin client certificate and private key
           ansible.builtin.shell: |
@@ -84,7 +82,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -94,7 +92,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Generate a certificate and private key for each Kubernetes worker node
           ansible.builtin.shell: |
@@ -117,10 +115,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: Worker nodes private and public key sucessfully created
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Generate the kube-proxy client certificate and private key
           ansible.builtin.shell: |
@@ -137,10 +133,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: kube-proxy client sucessfully created
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create directory certificates
           ansible.builtin.file:
@@ -156,10 +150,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
@@ -200,7 +192,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -210,7 +202,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.stat.exists
+          when: file_stat.exists
 
         - name: Upload worker certificates to gcp
           ansible.builtin.shell: |
@@ -227,10 +219,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Upload Kubernetes certificates to gcp
           ansible.builtin.shell: |
@@ -243,10 +233,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set the cluster's API server and other details for kubeconfig
           ansible.builtin.shell: |
@@ -266,10 +254,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil uploaded files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set or modify credentials for a user in the kubeconfig file
           ansible.builtin.shell: |
@@ -289,10 +275,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
           ansible.builtin.shell: |
@@ -311,10 +295,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Switch between different configurations in your kubeconfig file
           ansible.builtin.shell: |
@@ -330,10 +312,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Generate a kubeconfig file for the kube-proxy service
           ansible.builtin.shell: |
@@ -349,10 +329,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
           ansible.builtin.shell: |
@@ -368,10 +346,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
           ansible.builtin.shell: |
@@ -386,10 +362,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Switch between different configurations in your kubeconfig file
           ansible.builtin.shell: |
@@ -401,10 +375,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Upload kubeconfigs to gcp
           ansible.builtin.shell: |
@@ -419,7 +391,5 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
