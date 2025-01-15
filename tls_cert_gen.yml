@@ -242,7 +242,7 @@
               --certificate-authority=ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address.stdout }}:6443 \
-              --kubeconfig= {{ item.instanceinstance }}.kubeconfig
+              --kubeconfig= {{ item.instance }}.kubeconfig
           loop:
             - { instance: "worker-0" }
             - { instance: "worker-1" }
@@ -283,7 +283,7 @@
             kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
               --user=system:node:{{ instance }} \
-              --kubeconfig={{ instance }}.kubeconfig
+              --kubeconfig={{ item.instance }}.kubeconfig
           loop:
             - { instance: "worker-0" }
             - { instance: "worker-1" }
