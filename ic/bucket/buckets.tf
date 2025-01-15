@@ -1,6 +1,8 @@
 resource "google_storage_bucket" "kthw_misc" {
   location = "us-west1"
   name     = "kthw-misc"
+  # Set force_destroy to true to automatically delete objects in the bucket
+  force_destroy = true
 }
 
 # Upload a file to the GCS bucket

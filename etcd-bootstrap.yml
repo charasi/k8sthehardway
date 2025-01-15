@@ -35,10 +35,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.shell: |
@@ -51,10 +49,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set the etcd name to match the hostname of the current compute instance
           ansible.builtin.shell: |
@@ -66,10 +62,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set the etcd name to match the hostname of the current compute instance
           ansible.builtin.shell: |
@@ -81,10 +75,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Created directories
           ansible.builtin.shell: |
@@ -96,14 +88,12 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Download certificates from gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
             - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
@@ -112,10 +102,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the etcd.service systemd unit file
           ansible.builtin.shell: |
@@ -156,10 +144,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Move the etcd.service file you created into the /etc/systemd/system/ directory
           ansible.builtin.shell: |
@@ -171,10 +157,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Reload systemd's configuration
           ansible.builtin.shell: |
@@ -186,10 +170,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Enable the etcd service
           ansible.builtin.shell: |
@@ -201,10 +183,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Start the etcd Server
           ansible.builtin.shell: |
@@ -216,10 +196,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: List the etcd cluster members
           ansible.builtin.shell: |

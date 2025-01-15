@@ -75,7 +75,7 @@
 
         - name: Download certificates from gcp
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
             - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
@@ -85,10 +85,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.shell: |
@@ -101,10 +99,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the kube-apiserver.service systemd unit file
           ansible.builtin.shell: |
@@ -159,10 +155,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the kube-controller-manager.service systemd unit file
           ansible.builtin.shell: |
@@ -197,10 +191,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the kube-scheduler.service systemd unit file
           ansible.builtin.shell: |
@@ -227,10 +219,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Move the three service unit files to the /etc/systemd/system/ directory
           ansible.builtin.command:
@@ -303,10 +293,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to the kubernetes user
           ansible.builtin.shell: |
@@ -333,10 +321,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Download static ip text file from gcp
           ansible.builtin.shell: |
@@ -346,10 +332,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
@@ -368,7 +352,5 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0

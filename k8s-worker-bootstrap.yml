@@ -116,10 +116,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the bridge network configuration file
           ansible.builtin.shell: |
@@ -146,10 +144,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the loopback network configuration file
           ansible.builtin.shell: |
@@ -165,10 +161,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Move the network configuration files to the CNI configuration directory
           ansible.builtin.command:
@@ -178,7 +172,7 @@
 
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.shell: |
-            "gsutil cp {{ item.source }} {{ item.dest }}"
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "gs://kthw-misc/${HOSTNAME}-key.pem", dest: "/var/lib/kubelet/" }
             - { source: "gs://kthw-misc/${HOSTNAME}.pem", dest: "/var/lib/kubelet/" }
@@ -189,10 +183,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: gsutil copied files sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create the kubelet.service systemd unit file
           ansible.builtin.shell: |
@@ -235,10 +227,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Move the kubelet.service and kube-proxy.service files to /etc/systemd/system/
           ansible.builtin.command:

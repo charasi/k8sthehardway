@@ -9,16 +9,14 @@
       block:
         - name: Retrieve the kubernetes-the-hard-way static IP address
           ansible.builtin.shell: |
-            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/"
+            sudo gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/
           changed_when: false
           register: status
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
@@ -29,10 +27,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Configure kubectl to be able to connect to the Kubernetes cluster
           ansible.builtin.shell: |
@@ -45,10 +41,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Generate a kubeconfig file suitable for authenticating as the admin user
           ansible.builtin.shell: |
@@ -61,10 +55,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set credentials for a user in the kubeconfig file
           ansible.builtin.shell: |
@@ -76,10 +68,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Create or modify a context in your kubeconfig file
           ansible.builtin.shell: |
@@ -91,10 +81,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Set the active context for Kubernetes cluster configuration
           ansible.builtin.shell: |
@@ -104,10 +92,8 @@
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
-            msg: cmd process sucessfully
             var: status
             verbosity: 0
-          when: status.rc == 0
 
         - name: Check the health of the remote Kubernetes cluster
           ansible.builtin.command:
