@@ -39,7 +39,8 @@
             verbosity: 0
 
         - name: Get the main IP address
-          ansible.builtin.shell: "/bin/bash -c 'hostname -I | awk '{print $1}''"
+          ansible.builtin.command:
+            cmd: hostname -I
           register: ip_address
           changed_when: false
 
