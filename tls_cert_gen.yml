@@ -45,7 +45,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -55,7 +55,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Generate the admin client certificate and private key
           ansible.builtin.shell: |
@@ -79,7 +79,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -89,7 +89,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Generate a certificate and private key for each Kubernetes worker node
           ansible.builtin.shell: |
@@ -192,7 +192,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Check if the file exists
           ansible.builtin.stat:
@@ -202,7 +202,7 @@
         - name: Display file existence result
           ansible.builtin.debug:
             msg: "The file exists"
-          when: file_stat.exists
+          when: file_stat.stat.exists
 
         - name: Upload worker certificates to gcp
           ansible.builtin.shell: |
