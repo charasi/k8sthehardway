@@ -78,9 +78,9 @@
             var: status
             verbosity: 0
 
-        - name: Create the etcd.service systemd unit file
+        - name: Create the etcd.service systemd unit file in the current directory
           ansible.builtin.shell: |
-            cat > etcd.service <<EOF
+            cat > /home/wisccourant/etcd.service <<EOF
             [Unit]
             Description=etcd
             Documentation=https://github.com/coreos
@@ -113,7 +113,8 @@
           args:
             chdir: /home/wisccourant/
           register: status
-          changed_when: false
+          changed_when: true
+
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:
