@@ -121,6 +121,12 @@
             var: status
             verbosity: 0
 
+        - name: Ensure etcd directory has rwx permissions
+          ansible.builtin.file:
+            path: /etc/etcd
+            mode: '0770'
+            state: directory
+
         - name: Move the etcd.service file you created into the /etc/systemd/system/ directory
           ansible.builtin.shell: |
             sudo mv etcd.service /etc/systemd/system/
