@@ -81,6 +81,7 @@
             - { source: "gs://kthw-misc/ca-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kubernetes.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/encryption-config.yaml", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
