@@ -175,7 +175,7 @@
             [Service]
             ExecStart=/usr/local/bin/etcd \
               --name {{ host_name.stdout }} \
-              --kubeconfig=/etc/etcd/kubeconfig \
+              --kubeconfig=/etc/etcd/etcd.kubeconfig \
               --initial-advertise-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
               --listen-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
               --listen-client-urls https://{{ ip_address.stdout | trim }}:2379,https://127.0.0.1:2379 \
