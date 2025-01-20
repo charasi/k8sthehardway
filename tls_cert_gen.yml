@@ -548,14 +548,6 @@
             kubectl config set-credentials etcd-client \
               --client-certificate={{ etcd_client_cert }} \
               --client-key={{ etcd_client_key }} \
-              --cert-file={{ etcd_cert }} \
-              --key-file={{ etcd_key }} \
-              --peer-cert-file={{ etcd_cert }} \
-              --peer-key-file={{ etcd_key }} \
-              --trusted-ca-file={{ ca_cert }} \
-              --peer-trusted-ca-file={{ ca_cert }} \
-              --client-cert-auth \
-              --peer-client-cert-auth
               --embed-certs=true \
               --kubeconfig=etcd.kubeconfig
           args:
