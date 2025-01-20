@@ -128,7 +128,7 @@
               --certificate-authority=/etc/etcd/ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
-              --kubeconfig=etcd.kubeconfig
+              --kubeconfig=/etc/etcd/etcd.kubeconfig
           args:
             chdir: /etc/etcd/
           register: status
@@ -140,7 +140,7 @@
               --client-certificate=/etc/etcd/etcd-client.pem \
               --client-key=/etc/etcd/etcd-client-key.pem \
               --embed-certs=true \
-              --kubeconfig=etcd.kubeconfig
+              --kubeconfig=/etc/etcd/etcd.kubeconfig
           args:
             chdir: /etc/etcd/
           register: status
@@ -151,7 +151,7 @@
             kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
               --user=etcd \
-              --kubeconfig=etcd.kubeconfig
+              --kubeconfig=/etc/etcd/etcd.kubeconfig
           args:
             chdir: /etc/etcd/
           register: status
