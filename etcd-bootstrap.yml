@@ -38,6 +38,30 @@
             var: status
             verbosity: 0
 
+        - name: Download the Kubernetes Controller Binaries
+          ansible.builtin.get_url:
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print cfssl information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Make binaries executable
+          ansible.builtin.command:
+            cmd: chmod +x kubectl
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Move binaries to bin directory
+          ansible.builtin.command:
+            cmd: sudo mv kubectl /usr/local/bin/
+            chdir: /home/wisccourant/
+          changed_when: false
+
         - name: Get the main IP address
           ansible.builtin.command:
             cmd: hostname -I
