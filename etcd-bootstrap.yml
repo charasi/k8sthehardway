@@ -110,6 +110,8 @@
               --name {{ host_name.stdout }} \\
               --cert-file=/etc/etcd/etcd-client.pem \\
               --key-file=/etc/etcd/etcd-client-key.pem \\
+              --peer-cert-file=/etc/etcd/etcd-client.pem \\
+              --peer-key-file=/etc/etcd/etcd-client-key.pem \\
               --trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-client-cert-auth \\
