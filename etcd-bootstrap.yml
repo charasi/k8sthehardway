@@ -67,9 +67,12 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/etcd.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/etcd-key.pem", dest: "/etc/etcd/" }
             - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/etcd-client.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/etcd-client-key.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/etcd.kubeconfig", dest: "/etc/etcd/" }
           changed_when: false
           register: status
 
@@ -86,23 +89,16 @@
             Documentation=https://github.com/coreos
 
             [Service]
-            ExecStart=/usr/local/bin/etcd \\
-              --name {{ host_name.stdout }} \\
-              --cert-file=/etc/etcd/kubernetes.pem \\
-              --key-file=/etc/etcd/kubernetes-key.pem \\
-              --peer-cert-file=/etc/etcd/kubernetes.pem \\
-              --peer-key-file=/etc/etcd/kubernetes-key.pem \\
-              --trusted-ca-file=/etc/etcd/ca.pem \\
-              --peer-trusted-ca-file=/etc/etcd/ca.pem \\
-              --peer-client-cert-auth \\
-              --client-cert-auth \\
-              --initial-advertise-peer-urls https://{{ ip_address.stdout | trim }}:2380 \\
-              --listen-peer-urls https://{{ ip_address.stdout | trim }}:2380 \\
-              --listen-client-urls https://{{ ip_address.stdout | trim }}:2379,http://127.0.0.1:2379 \\
-              --advertise-client-urls https://{{ ip_address.stdout | trim }}:2379 \\
-              --initial-cluster-token etcd-cluster-0 \\
-              --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380,controller-2=https://10.240.0.12:2380 \\
-              --initial-cluster-state new \\
+            ExecStart=/usr/local/bin/etcd \
+              --name {{ host_name.stdout }} \
+              --kubeconfig=/etc/etcd/kubeconfig \
+              --initial-advertise-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
+              --listen-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
+              --listen-client-urls https://{{ ip_address.stdout | trim }}:2379,https://127.0.0.1:2379 \
+              --advertise-client-urls https://{{ ip_address.stdout | trim }}:2379 \
+              --initial-cluster-token etcd-cluster-0 \
+              --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380,controller-2=https://10.240.0.12:2380 \
+              --initial-cluster-state new \
               --data-dir=/var/lib/etcd
             Restart=on-failure
             RestartSec=5
@@ -120,12 +116,6 @@
           ansible.builtin.debug:
             var: status
             verbosity: 0
-
-        - name: Ensure etcd directory has rwx permissions
-          ansible.builtin.file:
-            path: /etc/etcd
-            mode: '0770'
-            state: directory
 
         - name: Move the etcd.service file you created into the /etc/systemd/system/ directory
           ansible.builtin.shell: |

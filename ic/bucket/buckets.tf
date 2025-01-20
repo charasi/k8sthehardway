@@ -76,3 +76,35 @@ resource "google_storage_bucket_object" "encrp_cfg" {
   source = "../certificates/encryption-config.yaml"
   content_type  = "application/x-yaml"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "controller_manager" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "controller-manager.json"
+  source = "../certificates/controller-manager.json"
+  content_type = "application/json"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "scheduler_csr" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "scheduler-csr.json"
+  source = "../certificates/scheduler-csr.json"
+  content_type = "application/json"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "etcd_csr" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "etcd-csr.json"
+  source = "../certificates/etcd-csr.json"
+  content_type = "application/json"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "etcd_client_csr" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "etcd-client-csr.json"
+  source = "../certificates/etcd-client-csr.json"
+  content_type = "application/json"
+}

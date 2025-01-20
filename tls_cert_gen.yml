@@ -3,6 +3,19 @@
   hosts: k8main
   remote_user: wisccourant
   become: true
+  vars:
+    kubernetes_public_address: "your-kubernetes-public-address"
+    ca_cert: /etc/kubernetes/ca.pem
+    # Add paths for the certs for each component (you can update these based on your actual paths)
+    etcd_cert: /etc/etcd/etcd.pem
+    etcd_key: /etc/etcd/etcd-client-key.pem
+    etcd_client_cert: /etc/etcd/etcd-client.pem
+    etcd_client_key: /etc/etcd/etcd-client-key.pem
+    controller_manager_cert: /etc/kubernetes/controller-manager.pem
+    controller_manager_key: /etc/kubernetes/controller-manager-key.pem
+    scheduler_cert: /etc/kubernetes/scheduler.pem
+    scheduler_key: /etc/kubernetes/scheduler-key.pem
+    kubeconfig_dir: "/home/wisccourant/certificates"
 
   tasks:
     - name: Provision CA and generate TLS Certificates
@@ -13,7 +26,7 @@
             state: directory
             mode: "0755"
 
-        - name: Download certificates from gcp
+        - name: Download certificates signing requests from gcp
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
@@ -25,6 +38,10 @@
             - { source: "gs://kthw-misc/worker-0-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/worker-1-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/worker-2-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/controller-manager.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/scheduler-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/etcd-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/etcd-client-csr.json", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
 
@@ -91,6 +108,142 @@
             msg: "The file exists"
           when: file_stat.stat.exists
 
+        - name: Generate the Controller Manager certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert \
+                -ca=ca.pem \
+                -ca-key=ca-key.pem \
+                -config=ca-config.json \
+                -profile=kubernetes \
+                controller-manager-csr.json | cfssljson -bare controller-manager
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/controller-manager-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/controller-manager.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Generate the scheduler certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -profile=kubernetes \
+              scheduler-csr.json | cfssljson -bare scheduler
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/scheduler-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/scheduler.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Generate the etcd server certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -profile=kubernetes \
+              etcd-csr.json | cfssljson -bare etcd
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/etcd-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/etcd.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Generate the etcd-client certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert \
+              -ca=ca.pem \
+              -ca-key=ca-key.pem \
+              -config=ca-config.json \
+              -profile=kubernetes \
+              etcd-client-csr.json | cfssljson -bare etcd-client
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/etcd-client-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/etcd-client.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
         - name: Generate a certificate and private key for each Kubernetes worker node
           ansible.builtin.shell: |
             set -o pipefail
@@ -141,7 +294,7 @@
             state: directory
             mode: "0755"
 
-        - name: Download certificates from gcp
+        - name: Download ip from gcp
           ansible.builtin.shell: |
             sudo gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/certificates/
           changed_when: false
@@ -176,7 +329,7 @@
               -ca=ca.pem \
               -ca-key=ca-key.pem \
               -config=ca-config.json \
-              -hostname=10.32.0.10,10.240.0.10,10.240.0.11,10.240.0.12,{{ kubernetes_public_address.stdout }},127.0.0.1,kubernetes.default \
+              -hostname=10.32.0.10,10.240.0.10,10.240.0.11,10.240.0.12,{{ kubernetes_public_address.stdout | trim }},127.0.0.1,kubernetes.default \
               -profile=kubernetes \
               kubernetes-csr.json | sudo cfssljson -bare kubernetes
           args:
@@ -241,7 +394,7 @@
             kubectl config set-cluster kubernetes-the-hard-way \
               --certificate-authority=ca.pem \
               --embed-certs=true \
-              --server=https://{{ kubernetes_public_address.stdout }}:6443 \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
               --kubeconfig={{ item.instance }}.kubeconfig
           loop:
             - { instance: "worker-0" }
@@ -320,7 +473,7 @@
             kubectl config set-cluster kubernetes-the-hard-way \
               --certificate-authority=ca.pem \
               --embed-certs=true \
-              --server=https://{{ kubernetes_public_address.stdout }}:6443 \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
               --kubeconfig=kube-proxy.kubeconfig
           args:
             chdir: /home/wisccourant/certificates/
@@ -378,6 +531,143 @@
             var: status
             verbosity: 0
 
+        - name: Generate kubeconfig file for etcd
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/etc/etcd/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set credentials for etcd client in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials etcd-client \
+              --client-certificate={{ etcd_client_cert }} \
+              --client-key={{ etcd_client_key }} \
+              --cert-file={{ etcd_cert }} \
+              --key-file={{ etcd_key }} \
+              --peer-cert-file={{ etcd_cert }} \
+              --peer-key-file={{ etcd_key }} \
+              --trusted-ca-file={{ ca_cert }} \
+              --peer-trusted-ca-file={{ ca_cert }} \
+              --client-cert-auth \
+              --peer-client-cert-auth
+              --embed-certs=true \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set context for etcd in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=etcd \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Use context for etcd kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Generate kubeconfig file for controller-manager
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority={{ ca_cert }} \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address }}:6443 \
+              --kubeconfig={{ kubeconfig_dir }}/controller-manager.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set credentials for controller-manager in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials controller-manager \
+              --client-certificate={{ controller_manager_cert }} \
+              --client-key={{ controller_manager_key }} \
+              --embed-certs=true \
+              --kubeconfig={{ kubeconfig_dir }}/controller-manager.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set context for controller-manager in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=controller-manager \
+              --kubeconfig={{ kubeconfig_dir }}/controller-manager.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Use context for controller-manager kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig={{ kubeconfig_dir }}/controller-manager.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Generate kubeconfig file for scheduler
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority={{ ca_cert }} \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address }}:6443 \
+              --kubeconfig={{ kubeconfig_dir }}/scheduler.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set credentials for scheduler in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials scheduler \
+              --client-certificate={{ scheduler_cert }} \
+              --client-key={{ scheduler_key }} \
+              --embed-certs=true \
+              --kubeconfig={{ kubeconfig_dir }}/scheduler.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Set context for scheduler in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=scheduler \
+              --kubeconfig={{ kubeconfig_dir }}/scheduler.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
+        - name: Use context for scheduler kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig={{ kubeconfig_dir }}/scheduler.kubeconfig
+          args:
+            chdir: "{{ kubeconfig_dir }}"
+          register: status
+          changed_when: false
+
         - name: Upload kubeconfigs to gcp
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
@@ -388,6 +678,17 @@
             - { source: "/home/wisccourant/certificates/kube-proxy.kubeconfig", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/ca.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/ca-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/etcd.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/etcd-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/etcd-client.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/etcd-client-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/scheduler.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/scheduler-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/controller-manager.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/controller-manager-key.pem", dest: "gs://kthw-misc/" }
+            - { src: "/home/wisccourant/certificates/etcd.kubeconfig", dest: "gs://kthw-misc/" }
+            - { src: "/home/wisccourant/certificates/controller-manager.kubeconfig", dest: "gs://kthw-misc/" }
+            - { src: "/home/wisccourant/certificates/scheduler.kubeconfig", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 

@@ -10,7 +10,7 @@ terraform {
 
 
 provider "google" {
-  project     = "jenkins-ci-sp24"
+  project     = "kthw-448206"
   region      = "us-west1"
   credentials = "kthw.json"
 }
