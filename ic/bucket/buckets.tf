@@ -78,10 +78,10 @@ resource "google_storage_bucket_object" "encrp_cfg" {
 }
 
 # Upload a file to the GCS bucket
-resource "google_storage_bucket_object" "controller_manager" {
+resource "google_storage_bucket_object" "controller_manager_csr" {
   bucket = google_storage_bucket.kthw_misc.name
-  name   = "controller-manager.json"
-  source = "../certificates/controller-manager.json"
+  name   = "controller-manager-csr.json"
+  source = "../certificates/controller-manager-csr.json"
   content_type = "application/json"
 }
 

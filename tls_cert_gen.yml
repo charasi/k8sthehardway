@@ -38,7 +38,7 @@
             - { source: "gs://kthw-misc/worker-0-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/worker-1-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/worker-2-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/controller-manager.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/controller-manager-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/scheduler-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/etcd-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/etcd-client-csr.json", dest: "/home/wisccourant/certificates/" }
