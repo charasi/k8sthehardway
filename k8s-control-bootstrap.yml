@@ -82,6 +82,10 @@
             - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kubernetes.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/encryption-config.yaml", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/controller-manager.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/controller-manager-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/scheduler.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/scheduler-key.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
@@ -101,13 +105,116 @@
             var: ip_address
             verbosity: 0
 
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /var/lib/kubernetes/static_ip.txt
+            chdir: /var/lib/kubernetes/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Verify that the IP address was retrieved
+          ansible.builtin.assert:
+            that:
+              - kubernetes_public_address.stdout | length > 0  # Ensures the content is not empty
+            msg: "No IP address was retrieved from the file."
+
+        - name: Use the IP address
+          ansible.builtin.debug:
+            msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
+
+        - name: Generate kubeconfig file for controller-manager
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set credentials for controller-manager in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials controller-manager \
+              --client-certificate=/var/lib/kubernetes/controller-manager.pem \
+              --client-key=/var/lib/kubernetes/controller-manager-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set context for controller-manager in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=controller-manager \
+              --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Use context for controller-manager kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Generate kubeconfig file for scheduler
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set credentials for scheduler in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials scheduler \
+              --client-certificate=/var/lib/kubernetes/scheduler.pem \
+              --client-key=/var/lib/kubernetes/scheduler-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set context for scheduler in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=scheduler \
+              --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Use context for scheduler kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
         - name: Create the kube-apiserver.service systemd unit file
           ansible.builtin.shell: |
             cat > kube-apiserver.service <<EOF
             [Unit]
             Description=Kubernetes API Server
             Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-            
+
             [Service]
             ExecStart=/usr/local/bin/kube-apiserver \
               --enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
@@ -141,10 +248,10 @@
               --v=2
             Restart=on-failure
             RestartSec=5
-            
+
             [Install]
             WantedBy=multi-user.target
-            
+
             EOF
           args:
             chdir: /home/wisccourant/
@@ -162,7 +269,7 @@
             [Unit]
             Description=Kubernetes Controller Manager
             Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-          
+
             [Service]
             ExecStart=/usr/local/bin/kube-controller-manager \\
               --bind-address=0.0.0.0 \\
@@ -178,9 +285,9 @@
               --v=2
             Restart=on-failure
             RestartSec=5
-            
+
             [Install]
-            WantedBy=multi-user.target  
+            WantedBy=multi-user.target
             EOF
           args:
             chdir: /home/wisccourant/

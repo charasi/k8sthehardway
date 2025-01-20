@@ -170,16 +170,178 @@
             chdir: /home/wisccourant/
           changed_when: false
 
+        - name: Get the main IP address
+          ansible.builtin.command:
+            cmd: hostname -I
+          register: ip_address
+          changed_when: false
+
+        - name: Retrieve the internal IP address for the current compute instance
+          ansible.builtin.command:
+            cmd: hostname
+          register: host_name
+          changed_when: false
+
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/${HOSTNAME}-key.pem", dest: "/var/lib/kubelet/" }
-            - { source: "gs://kthw-misc/${HOSTNAME}.pem", dest: "/var/lib/kubelet/" }
-            - { source: "gs://kthw-misc/${HOSTNAME}.kubeconfig", dest: "/var/lib/kubelet/kubeconfig" }
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/var/lib/kubelet/" }
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.pem", dest: "/var/lib/kubelet/" }
             - { source: "gs://kthw-misc/ca.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/var/lib/kube-proxy/" }
+            - { source: "gs://kthw-misc/kube-proxy-key.pem", dest: "/var/lib/kube-proxy/" }
           changed_when: false
           register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /var/lib/kubernetes/static_ip.txt
+            chdir: /var/lib/kubernetes/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Verify that the IP address was retrieved
+          ansible.builtin.assert:
+            that:
+              - kubernetes_public_address.stdout | length > 0  # Ensures the content is not empty
+            msg: "No IP address was retrieved from the file."
+
+        - name: Use the IP address
+          ansible.builtin.debug:
+            msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
+
+        - name: Generate a kubeconfig file for each worker node
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig={{ host_name.stdout | trim }}.kubeconfig
+          args:
+            chdir: /var/lib/kubelet/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Set or modify credentials for a user in the kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config set-credentials system:node:{{ host_name.stdout | trim }} \
+              --client-certificate=/var/lib/kubelet/{{ host_name.stdout | trim }}.pem \
+              --client-key=/var/lib/kubelet/{{ host_name.stdout | trim }}-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
+          args:
+            chdir: /var/lib/kubelet/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=system:node:{{ host_name.stdout | trim }} \
+              --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
+          args:
+            chdir: /var/lib/kubelet/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Switch between different configurations in your kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
+          args:
+            chdir: /var/lib/kubelet/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Generate a kubeconfig file for the kube-proxy service
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig=/var/lib/kube-proxy/kube-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kube-proxy/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-credentials kube-proxy \
+              --client-certificate=/var/lib/kube-proxy/kube-proxy.pem \
+              --client-key=/var/lib/kube-proxy/kube-proxy-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kube-proxy/kube-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kube-proxy/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Create or modify a context in your kubeconfig file, linking a Kubernetes cluster, user, and namespace
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=kube-proxy \
+              --kubeconfig=/var/lib/kube-proxy/kube-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kube-proxy/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Switch between different configurations in your kubeconfig file
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=/var/lib/kube-proxy/kube-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kube-proxy/
+          register: status
+          changed_when: false
 
         - name: Verify cmd process sucessfully
           ansible.builtin.debug:

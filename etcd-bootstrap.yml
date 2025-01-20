@@ -72,7 +72,7 @@
             - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
             - { source: "gs://kthw-misc/etcd-client.pem", dest: "/etc/etcd/" }
             - { source: "gs://kthw-misc/etcd-client-key.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/etcd.kubeconfig", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/static_ip.txt", dest: "/etc/etcd/" }
           changed_when: false
           register: status
 
@@ -80,6 +80,66 @@
           ansible.builtin.debug:
             var: status
             verbosity: 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /etc/etcd/static_ip.txt
+            chdir: /etc/etcd/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Verify that the IP address was retrieved
+          ansible.builtin.assert:
+            that:
+              - kubernetes_public_address.stdout | length > 0  # Ensures the content is not empty
+            msg: "No IP address was retrieved from the file."
+
+        - name: Use the IP address
+          ansible.builtin.debug:
+            msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
+
+        - name: Generate kubeconfig file for etcd
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/etc/etcd/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: /etc/etcd/
+          register: status
+          changed_when: false
+
+        - name: Set credentials for etcd client in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials etcd-client \
+              --client-certificate=/etc/etcd/etcd-client.pem \
+              --client-key=/etc/etcd/etcd-client-key.pem \
+              --embed-certs=true \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: /etc/etcd/
+          register: status
+          changed_when: false
+
+        - name: Set context for etcd in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=etcd \
+              --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: /etc/etcd/
+          register: status
+          changed_when: false
+
+        - name: Use context for etcd kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=etcd.kubeconfig
+          args:
+            chdir: /etc/etcd/
+          register: status
+          changed_when: false
 
         - name: Create the etcd.service systemd unit file in the current directory
           ansible.builtin.shell: |
