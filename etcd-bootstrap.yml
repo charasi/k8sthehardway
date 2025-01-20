@@ -178,6 +178,9 @@
               --cert-file=/etc/etcd/etcd-client.pem \
               --key-file=/etc/etcd/etcd-client-key.pem \
               --trusted-ca-file=/etc/etcd/ca.pem \
+              --peer-trusted-ca-file=/etc/etcd/ca.pem \
+              --peer-client-cert-auth \
+              --client-cert-auth \
               --initial-advertise-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
               --listen-peer-urls https://{{ ip_address.stdout | trim }}:2380 \
               --listen-client-urls https://{{ ip_address.stdout | trim }}:2379,https://127.0.0.1:2379 \
