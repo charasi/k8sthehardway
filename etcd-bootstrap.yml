@@ -115,6 +115,7 @@
               --trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-client-cert-auth \\
+              --log-level=debug \\
               --client-cert-auth \\
               --initial-advertise-peer-urls https://{{ ip_address.stdout | trim }}:2380 \\
               --listen-peer-urls https://{{ ip_address.stdout | trim }}:2380 \\
