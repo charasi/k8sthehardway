@@ -3,19 +3,6 @@
   hosts: k8main
   remote_user: wisccourant
   become: true
-  vars:
-    kubernetes_public_address: "your-kubernetes-public-address"
-    ca_cert: /etc/kubernetes/ca.pem
-    # Add paths for the certs for each component (you can update these based on your actual paths)
-    etcd_cert: /etc/etcd/etcd.pem
-    etcd_key: /etc/etcd/etcd-client-key.pem
-    etcd_client_cert: /etc/etcd/etcd-client.pem
-    etcd_client_key: /etc/etcd/etcd-client-key.pem
-    controller_manager_cert: /etc/kubernetes/controller-manager.pem
-    controller_manager_key: /etc/kubernetes/controller-manager-key.pem
-    scheduler_cert: /etc/kubernetes/scheduler.pem
-    scheduler_key: /etc/kubernetes/scheduler-key.pem
-    kubeconfig_dir: "/home/wisccourant/certificates"
 
   tasks:
     - name: Provision CA and generate TLS Certificates
