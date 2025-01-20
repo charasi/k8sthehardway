@@ -67,12 +67,14 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/etcd.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/etcd-key.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/etcd-client.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/etcd-client-key.pem", dest: "/etc/etcd/" }
-            - { source: "gs://kthw-misc/static_ip.txt", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/etcd.pem", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/etcd-key.pem", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/ca.pem", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/etcd-client.pem", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/etcd-client-key.pem", dest: "/etc/etcd/" }
+            #- { source: "gs://kthw-misc/static_ip.txt", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/kubernetes.pem", dest: "/etc/etcd/" }
+            - { source: "gs://kthw-misc/kubernetes-key.pem", dest: "/etc/etcd/" }
           changed_when: false
           register: status
 
@@ -108,10 +110,10 @@
             [Service]
             ExecStart=/usr/local/bin/etcd \\
               --name {{ host_name.stdout  | trim }} \\
-              --cert-file=/etc/etcd/etcd.pem \\
-              --key-file=/etc/etcd/etcd-key.pem \\
-              --peer-cert-file=/etc/etcd/etcd.pem \\
-              --peer-key-file=/etc/etcd/etcd-key.pem \\
+              --cert-file=/etc/etcd/kubernetes.pem \\
+              --key-file=/etc/etcd/kubernetes-key.pem \\
+              --peer-cert-file=/etc/etcd/kubernetes.pem \\
+              --peer-key-file=/etc/etcd/kubernetes-key.pem \\
               --trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-trusted-ca-file=/etc/etcd/ca.pem \\
               --peer-client-cert-auth \\
