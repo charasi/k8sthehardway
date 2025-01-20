@@ -534,7 +534,7 @@
         - name: Generate kubeconfig file for etcd
           ansible.builtin.shell: |
             kubectl config set-cluster kubernetes-the-hard-way \
-              --certificate-authority=/etc/etcd/ca.pem \
+              --certificate-authority=ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
               --kubeconfig=etcd.kubeconfig
@@ -585,7 +585,7 @@
         - name: Generate kubeconfig file for controller-manager
           ansible.builtin.shell: |
             kubectl config set-cluster kubernetes-the-hard-way \
-              --certificate-authority={{ ca_cert }} \
+              --certificate-authority=ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address }}:6443 \
               --kubeconfig={{ kubeconfig_dir }}/controller-manager.kubeconfig
@@ -628,7 +628,7 @@
         - name: Generate kubeconfig file for scheduler
           ansible.builtin.shell: |
             kubectl config set-cluster kubernetes-the-hard-way \
-              --certificate-authority={{ ca_cert }} \
+              --certificate-authority=ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address }}:6443 \
               --kubeconfig={{ kubeconfig_dir }}/scheduler.kubeconfig
