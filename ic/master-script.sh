@@ -9,6 +9,8 @@ sudo apt-get update
 # Install required packages in a single command
 sudo apt-get install -y maven openjdk-17-jre-headless python3 python3-pip software-properties-common
 
+sudo apt install net-tools
+
 # Add Jenkins repository and key
 sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
   https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
