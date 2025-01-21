@@ -86,6 +86,7 @@
             - { source: "gs://kthw-misc/controller-manager-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/scheduler.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/scheduler-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
