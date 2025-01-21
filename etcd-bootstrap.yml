@@ -80,23 +80,6 @@
             var: status
             verbosity: 0
 
-        - name: Read the IP address from the text file
-          ansible.builtin.command:
-            cmd: cat /etc/etcd/static_ip.txt
-            chdir: /etc/etcd/
-          register: kubernetes_public_address
-          changed_when: false
-
-        - name: Verify that the IP address was retrieved
-          ansible.builtin.assert:
-            that:
-              - kubernetes_public_address.stdout | length > 0  # Ensures the content is not empty
-            msg: "No IP address was retrieved from the file."
-
-        - name: Use the IP address
-          ansible.builtin.debug:
-            msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
-
         - name: Create the etcd.service systemd unit file in the current directory
           ansible.builtin.shell: |
             cat > /home/wisccourant/etcd.service <<EOF
