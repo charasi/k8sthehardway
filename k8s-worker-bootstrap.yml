@@ -297,7 +297,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
