@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11e32461e57919ce2d9159698742c052cf'
+    password = '11b991980c145c44f8f6adaa4f01a2cc6b'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -124,7 +124,6 @@ def main():
     if job.get_last_build().get_status() != 'SUCCESS':
         print(f"Build {job.build_id} did not pass.")
         exit(1)
-
 
     # Read the config.xml file
     with open("./certificates.xml", 'r') as file:
