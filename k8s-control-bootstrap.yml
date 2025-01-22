@@ -168,10 +168,10 @@
 
         - name: Generate kubeconfig file for scheduler
           ansible.builtin.shell: |
-            kubectl config set-cluster kubernetes-the-hard-way \\
-              --certificate-authority=/var/lib/kubernetes/ca.pem \\
-              --embed-certs=true \\
-              --server=https://{{ ip_address.stdout | trim }}:6443 \\
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://{{ ip_address.stdout | trim }}:6443 \
               --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
