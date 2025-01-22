@@ -226,7 +226,7 @@
               --audit-log-maxbackup=3 \\
               --audit-log-maxsize=100 \\
               --audit-log-path=/var/log/audit.log \\
-              --authorization-mode=Node,RBAC \\
+              --authorization-mode=Node,AlwaysAllow \\
               --bind-address=0.0.0.0 \\
               --client-ca-file=/var/lib/kubernetes/ca.pem \\
               --etcd-cafile=/var/lib/kubernetes/ca.pem \\
