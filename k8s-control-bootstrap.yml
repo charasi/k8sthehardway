@@ -353,18 +353,99 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Verify services are running
-          ansible.builtin.command:
-            cmd: kubectl get componentstatuses
-            chdir: /home/wisccourant/
-          register: output
-          changed_when: false
-
-        - name: Get output
-          ansible.builtin.debug:
-            var: output
-            verbosity: 0
-
         - name: Pause for 30 seconds
           ansible.builtin.pause:
             seconds: 10
+
+        - name: Create the system:kube-apiserver-to-kubelet ClusterRole
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              annotations:
+                rbac.authorization.kubernetes.io/autoupdate: "true"
+              labels:
+                kubernetes.io/bootstrapping: rbac-defaults
+              name: system:kube-apiserver-to-kubelet
+            rules:
+              - apiGroups:
+                  - ""
+                resources:
+                  - nodes/proxy
+                  - nodes/stats
+                  - nodes/log
+                  - nodes/spec
+                  - nodes/metrics
+                verbs:
+                  - "*"
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to the kubernetes user
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: system:kube-apiserver
+              namespace: ""
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:kube-apiserver-to-kubelet
+            subjects:
+              - apiGroup: rbac.authorization.k8s.io
+                kind: User
+                name: kubernetes
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          register: status
+          changed_when: false
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Download static ip text file from gcp
+          ansible.builtin.shell: |
+            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/"
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Read the IP address from the text file
+          ansible.builtin.command:
+            cmd: cat /home/wisccourant/static_ip.txt
+            chdir: /home/wisccourant/
+          register: kubernetes_public_address
+          changed_when: false
+
+        - name: Make a HTTP request for the Kubernetes version info
+          ansible.builtin.shell: |
+            curl --cacert ca.pem https://{{ kubernetes_public_address.stdout | trim }}:6443/version
+          changed_when: false
+          register: status
+          tags:
+            - skip_ansible_lint
+
+        - name: Verify cmd process sucessfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
