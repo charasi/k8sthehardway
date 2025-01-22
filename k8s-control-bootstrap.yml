@@ -128,7 +128,7 @@
             kubectl config set-cluster kubernetes-the-hard-way \
               --certificate-authority=/var/lib/kubernetes/ca.pem \
               --embed-certs=true \
-              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+              --server=https://{{ ip_address.stdout | trim }}:6443 \
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
@@ -168,10 +168,11 @@
 
         - name: Generate kubeconfig file for scheduler
           ansible.builtin.shell: |
-            kubectl config set-cluster kubernetes-the-hard-way \
-              --certificate-authority=/var/lib/kubernetes/ca.pem \
-              --embed-certs=true \
-              --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
+            kubectl config set-cluster kubernetes-the-hard-way \\
+              --certificate-authority=/var/lib/kubernetes/ca.pem \\
+              --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig \\
+              --embed-certs=true \\
+              --server=https://{{ ip_address.stdout | trim }}:6443 \\
               --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
@@ -279,8 +280,8 @@
               --cluster-name=kubernetes \\
               --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
               --cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \\
+              --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig \\
               --leader-elect=true \\
-              --master=http://127.0.0.1:8080 \\
               --root-ca-file=/var/lib/kubernetes/ca.pem \\
               --service-account-private-key-file=/var/lib/kubernetes/ca-key.pem \\
               --service-cluster-ip-range=10.32.0.0/24 \\
@@ -310,8 +311,8 @@
 
             [Service]
             ExecStart=/usr/local/bin/kube-scheduler \\
+              --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig \\
               --leader-elect=true \\
-              --master=http://127.0.0.1:8080 \\
               --v=2
             Restart=on-failure
             RestartSec=5
