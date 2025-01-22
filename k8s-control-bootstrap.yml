@@ -359,7 +359,6 @@
 
         - name: Create the system:kube-apiserver-to-kubelet ClusterRole
           ansible.builtin.shell: |
-            set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRole
@@ -393,7 +392,6 @@
 
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to the kubernetes user
           ansible.builtin.shell: |
-            set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
