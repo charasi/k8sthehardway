@@ -357,13 +357,33 @@
           ansible.builtin.pause:
             seconds: 10
 
-        - name: Export KUBECONFIG for scheduler
-          ansible.builtin.shell: |
-            echo "KUBECONFIG is set for scheduler"
-          register: kubeconfig_export_status
-          changed_when: false
-          environment:
-            KUBECONFIG: /var/lib/kubernetes/scheduler.kubeconfig
+        - name: Set KUBECONFIG in /etc/profile for login shells
+          ansible.builtin.lineinfile:
+            path: /etc/profile
+            line: "export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig"
+            create: yes
+            state: present
+            regexp: '^export KUBECONFIG='
+            backup: yes  # Backup the file before making changes
+
+        - name: Set KUBECONFIG in /etc/bash.bashrc for interactive non-login shells
+          ansible.builtin.lineinfile:
+            path: /etc/bash.bashrc
+            line: "export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig"
+            create: yes
+            state: present
+            regexp: '^export KUBECONFIG='
+            backup: yes  # Backup the file before making changes
+
+        - name: Reload system-wide profile to apply changes
+          ansible.builtin.shell:
+            cmd: "source /etc/profile"
+          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
+
+        - name: Reload bashrc to apply changes
+          ansible.builtin.shell:
+            cmd: "source /etc/bash.bashrc"
+          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Set correct permissions for kubeconfig scheduler
           ansible.builtin.command:
@@ -374,7 +394,6 @@
         # Create the RBAC ClusterRole for the current user
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for scheduler
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -405,7 +424,6 @@
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole scheduler
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -436,13 +454,33 @@
           ansible.builtin.debug:
             var: rbac_binding_status
 
-        - name: Export KUBECONFIG for controller-manager
-          ansible.builtin.shell: |
-            echo "KUBECONFIG is set for controller-manager"
-          register: kubeconfig_export_status
-          changed_when: false
-          environment:
-            KUBECONFIG: /var/lib/kubernetes/controller-manager.kubeconfig
+        - name: Set KUBECONFIG in /etc/profile for login shells
+          ansible.builtin.lineinfile:
+            path: /etc/profile
+            line: "export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig"
+            create: yes
+            state: present
+            regexp: '^export KUBECONFIG='
+            backup: yes  # Backup the file before making changes
+
+        - name: Set KUBECONFIG in /etc/bash.bashrc for interactive non-login shells
+          ansible.builtin.lineinfile:
+            path: /etc/bash.bashrc
+            line: "export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig"
+            create: yes
+            state: present
+            regexp: '^export KUBECONFIG='
+            backup: yes  # Backup the file before making changes
+
+        - name: Reload system-wide profile to apply changes
+          ansible.builtin.shell:
+            cmd: "source /etc/profile"
+          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
+
+        - name: Reload bashrc to apply changes
+          ansible.builtin.shell:
+            cmd: "source /etc/bash.bashrc"
+          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Set correct permissions for kubeconfig scheduler
           ansible.builtin.command:
@@ -453,7 +491,6 @@
         # Create the RBAC ClusterRole for the current user
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for controller-manager
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -484,7 +521,6 @@
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user controller-manager
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
