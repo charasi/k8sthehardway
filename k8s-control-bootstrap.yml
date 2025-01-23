@@ -377,12 +377,12 @@
 
         - name: Reload system-wide profile to apply changes
           ansible.builtin.shell:
-            cmd: "source /etc/profile"
+            cmd: "bash -c 'source /etc/profile'"
           ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Reload bashrc to apply changes
           ansible.builtin.shell:
-            cmd: "source /etc/bash.bashrc"
+            cmd: "bash -c 'source /etc/bash.bashrc'"
           ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Set correct permissions for kubeconfig scheduler
@@ -474,12 +474,12 @@
 
         - name: Reload system-wide profile to apply changes
           ansible.builtin.shell:
-            cmd: "source /etc/profile"
+            cmd: "bash -c 'source /etc/profile'"
           ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Reload bashrc to apply changes
           ansible.builtin.shell:
-            cmd: "source /etc/bash.bashrc"
+            cmd: "bash -c 'source /etc/bash.bashrc'"
           ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
 
         - name: Set correct permissions for kubeconfig scheduler
