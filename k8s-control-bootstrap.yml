@@ -400,7 +400,7 @@
             executable: /bin/bash
 
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
-        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user scheduler
+        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole scheduler
           ansible.builtin.shell: |
             set -o pipefail
             cat <<EOF | kubectl apply -f -
