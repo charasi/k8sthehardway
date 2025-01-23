@@ -365,6 +365,11 @@
 
         - name: Export KUBECONFIG and create RBAC resources for each user
           block:
+            # Debugging the variable to confirm it's available
+            - name: Debug kubeconfig_users variable
+              ansible.builtin.debug:
+                var: kubeconfig_users
+
             # Export KUBECONFIG for the user
             - name: "Export KUBECONFIG for {{ item.name }}"
               ansible.builtin.shell: |
@@ -380,6 +385,9 @@
             - name: "Set correct permissions for kubeconfig {{ item.name }}"
               ansible.builtin.command:
                 cmd: sudo chmod 644 /var/lib/kubernetes/{{ item.name }}.kubeconfig
+              loop: "{{ kubeconfig_users }}"
+              loop_control:
+                loop_var: item
               register: chmod_status
               changed_when: true
 
@@ -453,6 +461,7 @@
               loop: "{{ kubeconfig_users }}"
               loop_control:
                 loop_var: item
+
 
         - name: Verify services are running
           ansible.builtin.command:
