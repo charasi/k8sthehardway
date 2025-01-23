@@ -5,9 +5,9 @@
   vars:
     kubeconfig_users:
       - name: scheduler
-        kubeconfig_path: "/path/to/scheduler/kubeconfig"
+        kubeconfig_path: "/var/lib/kubernetes/scheduler.kubeconfig"
       - name: controller-manager
-        kubeconfig_path: "/path/to/controller-manager/kubeconfig"
+        kubeconfig_path: "/var/lib/kubernetes/controller-manager.kubeconfig"
   become: true
 
   tasks:
