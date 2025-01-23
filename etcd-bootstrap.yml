@@ -33,7 +33,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -58,7 +58,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -77,53 +77,10 @@
           changed_when: false
           register: status
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
-
-        - name: Generate kubeconfig file for etcd
-          ansible.builtin.shell: |
-            kubectl config set-cluster etcd-cluster \
-              --certificate-authority=/etc/etcd/ca.pem \
-              --embed-certs=true \
-              --server=https://{{ ip_address.stdout | trim }}:2379 \
-              --kubeconfig=/etc/etcd/etcd.kubeconfig
-          args:
-            chdir: /etc/etcd/
-          register: status
-          changed_when: false
-
-        - name: Set credentials for etcd in kubeconfig
-          ansible.builtin.shell: |
-            kubectl config set-credentials etcd-user \
-              --client-certificate=/etc/etcd/etcd-client.pem \
-              --client-key=/etc/etcd/etcd-client-key.pem \
-              --embed-certs=true \
-              --kubeconfig=/etc/etcd/etcd.kubeconfig
-          args:
-            chdir: /etc/etcd/
-          register: status
-          changed_when: false
-
-        - name: Set context for etcd in kubeconfig
-          ansible.builtin.shell: |
-            kubectl config set-context etcd-context \
-              --cluster=etcd-cluster \
-              --user=etcd-user \
-              --kubeconfig=/etc/etcd/etcd.kubeconfig
-          args:
-            chdir: /etc/etcd/
-          register: status
-          changed_when: false
-
-        - name: Use context for controller-manager kubeconfig
-          ansible.builtin.shell: |
-            kubectl config use-context etcd-context --kubeconfig=/etc/etcd/etcd.kubeconfig
-          args:
-            chdir: /etc/etcd/
-          register: status
-          changed_when: false
 
         - name: Create the etcd.service systemd unit file in the current directory
           ansible.builtin.shell: |
@@ -164,7 +121,7 @@
           changed_when: true
 
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -190,7 +147,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -203,7 +160,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -216,7 +173,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -229,7 +186,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
