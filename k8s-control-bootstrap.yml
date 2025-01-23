@@ -421,6 +421,8 @@
                 loop_var: item
               register: rbac_status
               changed_when: false
+              args:
+                executable: /bin/bash
 
             # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
             - name: "Bind the system:kube-apiserver-to-kubelet ClusterRole to user {{ item.name }}"
@@ -446,6 +448,8 @@
                 loop_var: item
               register: rbac_binding_status
               changed_when: false
+              args:
+                executable: /bin/bash
 
             # Verify the ClusterRole and ClusterRoleBinding for the current user
             - name: "Verify ClusterRole creation for {{ item.name }}"
