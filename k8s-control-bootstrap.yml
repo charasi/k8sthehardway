@@ -572,17 +572,6 @@
             var: output
             verbosity: 0
 
-        - name: Download static ip text file from gcp
-          ansible.builtin.shell: |
-            "sudo gsutil cp gs://kthw-misc/static_ip.txt /var/lib/kubernetes/"
-          changed_when: false
-          register: status
-
-        - name: Verify cmd process successfully
-          ansible.builtin.debug:
-            var: status
-            verbosity: 0
-
         - name: Read the IP address from the text file
           ansible.builtin.command:
             cmd: cat /var/lib/kubernetes/static_ip.txt
