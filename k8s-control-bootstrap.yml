@@ -374,6 +374,7 @@
         # Create the RBAC ClusterRole for the current user
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for scheduler
           ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -404,6 +405,7 @@
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole scheduler
           ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -426,11 +428,11 @@
             executable: /bin/bash
 
         # Verify the ClusterRole and ClusterRoleBinding for the current user
-        - name: Verify ClusterRole creation for controller-manager
+        - name: Verify ClusterRole creation for scheduler
           ansible.builtin.debug:
             var: rbac_status
 
-        - name: Verify ClusterRoleBinding creation for controller-manager
+        - name: Verify ClusterRoleBinding creation for scheduler
           ansible.builtin.debug:
             var: rbac_binding_status
 
@@ -451,6 +453,7 @@
         # Create the RBAC ClusterRole for the current user
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for controller-manager
           ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
@@ -481,6 +484,7 @@
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user controller-manager
           ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             set -o pipefail
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
