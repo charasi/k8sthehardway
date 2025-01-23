@@ -574,7 +574,7 @@
 
         - name: Download static ip text file from gcp
           ansible.builtin.shell: |
-            "gsutil cp gs://kthw-misc/static_ip.txt /var/lib/kubernetes/"
+            "sudo gsutil cp gs://kthw-misc/static_ip.txt /var/lib/kubernetes/"
           changed_when: false
           register: status
 
