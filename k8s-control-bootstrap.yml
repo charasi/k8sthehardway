@@ -574,7 +574,7 @@
 
         - name: Download static ip text file from gcp
           ansible.builtin.shell: |
-            "gsutil cp gs://kthw-misc/static_ip.txt /home/wisccourant/"
+            "gsutil cp gs://kthw-misc/static_ip.txt /var/lib/kubernetes/"
           changed_when: false
           register: status
 
@@ -585,13 +585,14 @@
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
-            cmd: cat /home/wisccourant/static_ip.txt
-            chdir: /home/wisccourant/
+            cmd: cat /var/lib/kubernetes/static_ip.txt
+            chdir: /var/lib/kubernetes/
           register: kubernetes_public_address
           changed_when: false
 
         - name: Make a HTTP request for the Kubernetes version info
           ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             curl --cacert ca.pem https://{{ kubernetes_public_address.stdout | trim }}:6443/version
           changed_when: false
           register: status
