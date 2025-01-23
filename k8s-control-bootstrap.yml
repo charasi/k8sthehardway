@@ -359,9 +359,11 @@
 
         - name: Export KUBECONFIG for scheduler
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
+            echo "KUBECONFIG is set for scheduler"
           register: kubeconfig_export_status
           changed_when: false
+          environment:
+            KUBECONFIG: /var/lib/kubernetes/scheduler.kubeconfig
 
         - name: Set correct permissions for kubeconfig scheduler
           ansible.builtin.command:
@@ -434,9 +436,11 @@
 
         - name: Export KUBECONFIG for controller-manager
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
+            echo "KUBECONFIG is set for controller-manager"
           register: kubeconfig_export_status
           changed_when: false
+          environment:
+            KUBECONFIG: /var/lib/kubernetes/controller-manager.kubeconfig
 
         - name: Set correct permissions for kubeconfig scheduler
           ansible.builtin.command:
