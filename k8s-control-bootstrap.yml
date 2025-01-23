@@ -375,10 +375,11 @@
             regexp: '^export KUBECONFIG='
             backup: yes  # Backup the file before making changes
 
-        - name: Reload system-wide profile to apply changes
-          ansible.builtin.shell:
-            cmd: "bash -c 'source /etc/profile'"
-          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
+        - name: Source the profile to apply the environment variable
+          ansible.builtin.shell: "source /etc/profile && echo $KUBECONFIG"
+          become: yes
+          register: result
+          changed_when: false
 
         - name: Reload bashrc to apply changes
           ansible.builtin.shell:
