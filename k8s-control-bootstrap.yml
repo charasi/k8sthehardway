@@ -376,10 +376,14 @@
             backup: yes  # Backup the file before making changes
 
         - name: Source the profile to apply the environment variable
-          ansible.builtin.shell: "source /etc/profile && echo $KUBECONFIG"
-          become: yes
-          register: result
+          ansible.builtin.shell: |
+            . /etc/profile && echo $KUBECONFIG
+          register: kubeconfig_output
           changed_when: false
+
+        - name: Display the result
+          ansible.builtin.debug:
+            msg: "KUBECONFIG is set to: {{ kubeconfig_output.stdout }}"
 
         - name: Reload bashrc to apply changes
           ansible.builtin.shell:
