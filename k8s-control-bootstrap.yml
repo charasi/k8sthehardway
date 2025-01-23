@@ -2,12 +2,6 @@
 - name: Bootstrapping the Kubernetes Control Plane
   hosts: k8controllers
   remote_user: wisccourant
-  vars:
-    kubeconfig_users:
-      - name: scheduler
-        kubeconfig_path: "/var/lib/kubernetes/scheduler.kubeconfig"
-      - name: controller-manager
-        kubeconfig_path: "/var/lib/kubernetes/controller-manager.kubeconfig"
   become: true
 
   tasks:
@@ -363,109 +357,155 @@
           ansible.builtin.pause:
             seconds: 10
 
-        - name: Export KUBECONFIG and create RBAC resources for each user
-          block:
-            # Debugging the variable to confirm it's available
-            - name: Debug kubeconfig_users variable
-              ansible.builtin.debug:
-                var: kubeconfig_users
+        - name: Export KUBECONFIG for scheduler
+          ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
+          register: kubeconfig_export_status
+          changed_when: false
 
-            # Export KUBECONFIG for the user
-            - name: "Export KUBECONFIG for {{ item.name }}"
-              ansible.builtin.shell: |
-                echo "KUBECONFIG is set for {{ item.name }}"
-                export KUBECONFIG={{ item.kubeconfig_path }}
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
-              register: kubeconfig_export_status
-              changed_when: false
+        - name: Set correct permissions for kubeconfig scheduler
+          ansible.builtin.command:
+            cmd: sudo chmod 644 /var/lib/kubernetes/scheduler.kubeconfig
+          register: chmod_status
+          changed_when: true
 
-            # Ensure the correct permissions are set for the kubeconfig file
-            - name: "Set correct permissions for kubeconfig {{ item.name }}"
-              ansible.builtin.command:
-                cmd: sudo chmod 644 /var/lib/kubernetes/{{ item.name }}.kubeconfig
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
-              register: chmod_status
-              changed_when: true
+        # Create the RBAC ClusterRole for the current user
+        - name: Create system:kube-apiserver-to-kubelet ClusterRole for scheduler
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              annotations:
+                rbac.authorization.kubernetes.io/autoupdate: "true"
+              labels:
+                kubernetes.io/bootstrapping: rbac-defaults
+              name: system:kube-apiserver-to-kubelet
+            rules:
+              - apiGroups:
+                  - ""
+                resources:
+                  - nodes/proxy
+                  - nodes/stats
+                  - nodes/log
+                  - nodes/spec
+                  - nodes/metrics
+                verbs:
+                  - "*"
+            EOF
+          register: rbac_status
+          changed_when: false
+          args:
+            executable: /bin/bash
 
-            # Create the RBAC ClusterRole for the current user
-            - name: "Create system:kube-apiserver-to-kubelet ClusterRole for {{ item.name }}"
-              ansible.builtin.shell: |
-                set -o pipefail
-                cat <<EOF | kubectl apply -f -
-                apiVersion: rbac.authorization.k8s.io/v1
-                kind: ClusterRole
-                metadata:
-                  annotations:
-                    rbac.authorization.kubernetes.io/autoupdate: "true"
-                  labels:
-                    kubernetes.io/bootstrapping: rbac-defaults
-                  name: system:kube-apiserver-to-kubelet
-                rules:
-                  - apiGroups:
-                      - ""
-                    resources:
-                      - nodes/proxy
-                      - nodes/stats
-                      - nodes/log
-                      - nodes/spec
-                      - nodes/metrics
-                    verbs:
-                      - "*"
-                EOF
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
-              register: rbac_status
-              changed_when: false
-              args:
-                executable: /bin/bash
+        # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
+        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user scheduler
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: system:kube-apiserver
+              namespace: ""
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:kube-apiserver-to-kubelet
+            subjects:
+              - apiGroup: rbac.authorization.k8s.io
+                kind: User
+                name: scheduler
+            EOF
+          register: rbac_binding_status
+          changed_when: false
+          args:
+            executable: /bin/bash
 
-            # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
-            - name: "Bind the system:kube-apiserver-to-kubelet ClusterRole to user {{ item.name }}"
-              ansible.builtin.shell: |
-                set -o pipefail
-                cat <<EOF | kubectl apply -f -
-                apiVersion: rbac.authorization.k8s.io/v1
-                kind: ClusterRoleBinding
-                metadata:
-                  name: system:kube-apiserver
-                  namespace: ""
-                roleRef:
-                  apiGroup: rbac.authorization.k8s.io
-                  kind: ClusterRole
-                  name: system:kube-apiserver-to-kubelet
-                subjects:
-                  - apiGroup: rbac.authorization.k8s.io
-                    kind: User
-                    name: {{ item.name }}
-                EOF
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
-              register: rbac_binding_status
-              changed_when: false
-              args:
-                executable: /bin/bash
+        # Verify the ClusterRole and ClusterRoleBinding for the current user
+        - name: Verify ClusterRole creation for controller-manager
+          ansible.builtin.debug:
+            var: rbac_status
 
-            # Verify the ClusterRole and ClusterRoleBinding for the current user
-            - name: "Verify ClusterRole creation for {{ item.name }}"
-              ansible.builtin.debug:
-                var: rbac_status
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
+        - name: Verify ClusterRoleBinding creation for controller-manager
+          ansible.builtin.debug:
+            var: rbac_binding_status
 
-            - name: "Verify ClusterRoleBinding creation for {{ item.name }}"
-              ansible.builtin.debug:
-                var: rbac_binding_status
-              loop: "{{ kubeconfig_users }}"
-              loop_control:
-                loop_var: item
+        - name: Export KUBECONFIG for controller-manager
+          ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
+          register: kubeconfig_export_status
+          changed_when: false
 
+        - name: Set correct permissions for kubeconfig scheduler
+          ansible.builtin.command:
+            cmd: sudo chmod 644 /var/lib/kubernetes/controller-manager.kubeconfig
+          register: chmod_status
+          changed_when: true
+
+        # Create the RBAC ClusterRole for the current user
+        - name: Create system:kube-apiserver-to-kubelet ClusterRole for controller-manager
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              annotations:
+                rbac.authorization.kubernetes.io/autoupdate: "true"
+              labels:
+                kubernetes.io/bootstrapping: rbac-defaults
+              name: system:kube-apiserver-to-kubelet
+            rules:
+              - apiGroups:
+                  - ""
+                resources:
+                  - nodes/proxy
+                  - nodes/stats
+                  - nodes/log
+                  - nodes/spec
+                  - nodes/metrics
+                verbs:
+                  - "*"
+            EOF
+          register: rbac_status
+          changed_when: false
+          args:
+            executable: /bin/bash
+
+        # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
+        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user controller-manager
+          ansible.builtin.shell: |
+            set -o pipefail
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: system:kube-apiserver
+              namespace: ""
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:kube-apiserver-to-kubelet
+            subjects:
+              - apiGroup: rbac.authorization.k8s.io
+                kind: User
+                name: controller-manager
+            EOF
+          register: rbac_binding_status
+          changed_when: false
+          args:
+            executable: /bin/bash
+
+        # Verify the ClusterRole and ClusterRoleBinding for the current user
+        - name: Verify ClusterRole creation for controller-manager
+          ansible.builtin.debug:
+            var: rbac_status
+
+        - name: Verify ClusterRoleBinding creation for controller-manager
+          ansible.builtin.debug:
+            var: rbac_binding_status
 
         - name: Verify services are running
           ansible.builtin.command:
