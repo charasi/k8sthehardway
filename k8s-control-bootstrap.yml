@@ -400,6 +400,7 @@
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for scheduler
           ansible.builtin.shell: |
             set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRole
@@ -430,6 +431,7 @@
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole scheduler
           ansible.builtin.shell: |
             set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
@@ -497,6 +499,7 @@
         - name: Create system:kube-apiserver-to-kubelet ClusterRole for controller-manager
           ansible.builtin.shell: |
             set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRole
@@ -527,6 +530,7 @@
         - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user controller-manager
           ansible.builtin.shell: |
             set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
@@ -557,9 +561,9 @@
             var: rbac_binding_status
 
         - name: Verify services are running
-          ansible.builtin.command:
-            cmd: kubectl get componentstatuses
-            chdir: /home/wisccourant/
+          ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
+            kubectl get componentstatuses
           register: output
           changed_when: false
 
@@ -574,7 +578,7 @@
           changed_when: false
           register: status
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
