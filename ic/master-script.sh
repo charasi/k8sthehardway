@@ -29,7 +29,7 @@ sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt-get install -y ansible
 
 # install nginx
-sudo apt install nginx
+sudo apt install nginx -y
 
 # Ensure the .ssh directory exists
 mkdir -p ~/.ssh
