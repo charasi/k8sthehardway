@@ -427,6 +427,8 @@
             - { source: "/home/wisccourant/certificates/scheduler-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/controller-manager.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/controller-manager-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/reverse-proxy.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/reverse-proxy-key.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 
