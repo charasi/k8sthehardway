@@ -15,5 +15,8 @@ sudo apt install net-tools
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt-get install -y ansible-core
 
+# install nginx
+sudo apt install nginx
+
 # Script completion message
 echo "All required packages (Maven, Java, Python3, Ansible) have been installed successfully."

@@ -28,6 +28,9 @@ sudo apt-get install -y jenkins
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt-get install -y ansible
 
+# install nginx
+sudo apt install nginx
+
 # Ensure the .ssh directory exists
 mkdir -p ~/.ssh
 

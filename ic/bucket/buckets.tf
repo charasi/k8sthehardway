@@ -108,3 +108,10 @@ resource "google_storage_bucket_object" "etcd_client_csr" {
   source = "../certificates/etcd-client-csr.json"
   content_type = "application/json"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "reverse_proxy" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "nginx.conf"
+  source = "../certificates/nginx.conf"
+}

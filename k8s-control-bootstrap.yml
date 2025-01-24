@@ -581,7 +581,6 @@
 
         - name: Make a HTTP request for the Kubernetes version info
           ansible.builtin.shell: |
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
             curl --cacert ca.pem https://{{ kubernetes_public_address.stdout | trim }}:6443/version
           changed_when: false
           register: status
