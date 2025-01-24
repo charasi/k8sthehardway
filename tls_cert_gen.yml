@@ -240,7 +240,7 @@
               -ca-key=ca-key.pem \
               -config=ca-config.json \
               -profile=kubernetes \
-              reverse-proxy-csr.json.json | cfssljson -bare reverse-proxy
+              reverse-proxy-csr.json | cfssljson -bare reverse-proxy
           args:
             executable: /bin/bash
             chdir: /home/wisccourant/certificates/
