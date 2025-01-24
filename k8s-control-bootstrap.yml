@@ -434,6 +434,7 @@
         - name: Create custom ClusterRole for scheduler
           ansible.builtin.shell: |
             set -o pipefail
+            sudo chmod 644 /var/lib/kubernetes/scheduler.kubeconfig
             export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
             cat <<EOF | kubectl apply -f -
             apiVersion: rbac.authorization.k8s.io/v1
