@@ -87,6 +87,9 @@
             - { source: "gs://kthw-misc/scheduler.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/scheduler-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/reverse-proxy.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/reverse-proxy-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
           changed_when: false
           register: status
 
@@ -161,6 +164,49 @@
         - name: Use context for controller-manager kubeconfig
           ansible.builtin.shell: |
             kubectl config use-context controller-manager-context --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Generate kubeconfig file for reverse-proxy
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://127.0.0.1:6443 \
+              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set credentials for controller-manager in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials reverse-proxy \
+              --client-certificate=/var/lib/kubernetes/reverse-proxy.pem \
+              --client-key=/var/lib/kubernetes/reverse-proxy-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set context for reverse-proxy in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context reverse-proxy-context \
+              --cluster=kubernetes-the-hard-way \
+              --user=reverse-proxy \
+              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Use context for reverse-proxy kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context reverse-proxy-context --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -353,42 +399,25 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Pause for 30 seconds
+        - name: Pause for 10 seconds
           ansible.builtin.pause:
             seconds: 10
 
-        - name: Set KUBECONFIG in /etc/profile for login shells
-          ansible.builtin.lineinfile:
-            path: /etc/profile
-            line: "export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig"
-            create: yes
-            state: present
-            regexp: '^export KUBECONFIG='
-            backup: yes  # Backup the file before making changes
-
-        - name: Set KUBECONFIG in /etc/bash.bashrc for interactive non-login shells
-          ansible.builtin.lineinfile:
-            path: /etc/bash.bashrc
-            line: "export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig"
-            create: yes
-            state: present
-            regexp: '^export KUBECONFIG='
-            backup: yes  # Backup the file before making changes
-
-        - name: Source the profile to apply the environment variable
-          ansible.builtin.shell: |
-            . /etc/profile && echo $KUBECONFIG
-          register: kubeconfig_output
+        - name: Start the nginx Services
+          ansible.builtin.command:
+            cmd: sudo systemctl start nginx
+            chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Display the result
-          ansible.builtin.debug:
-            msg: "KUBECONFIG is set to: {{ kubeconfig_output.stdout }}"
+        - name: Enable the nginx Services
+          ansible.builtin.command:
+            cmd: sudo systemctl enable nginx
+            chdir: /home/wisccourant/
+          changed_when: false
 
-        - name: Reload bashrc to apply changes
-          ansible.builtin.shell:
-            cmd: "bash -c 'source /etc/bash.bashrc'"
-          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
+        - name: Pause for 10 seconds
+          ansible.builtin.pause:
+            seconds: 10
 
         - name: Set correct permissions for kubeconfig scheduler
           ansible.builtin.command:
@@ -396,8 +425,13 @@
           register: chmod_status
           changed_when: true
 
-        # Create the RBAC ClusterRole for the current user
-        - name: Create system:kube-apiserver-to-kubelet ClusterRole for scheduler
+        - name: Set correct permissions for kubeconfig reverse-proxy
+          ansible.builtin.command:
+            cmd: sudo chmod 644 /var/lib/kubernetes/reverse-proxy.kubeconfig
+          register: chmod_status
+          changed_when: true
+
+        - name: Create custom ClusterRole for scheduler
           ansible.builtin.shell: |
             set -o pipefail
             export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
@@ -409,7 +443,7 @@
                 rbac.authorization.kubernetes.io/autoupdate: "true"
               labels:
                 kubernetes.io/bootstrapping: rbac-defaults
-              name: system:kube-apiserver-to-kubelet
+              name: scheduler-role
             rules:
               - apiGroups:
                   - ""
@@ -427,8 +461,7 @@
           args:
             executable: /bin/bash
 
-        # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
-        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole scheduler
+        - name: Bind custom ClusterRole to scheduler
           ansible.builtin.shell: |
             set -o pipefail
             export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
@@ -436,12 +469,12 @@
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
             metadata:
-              name: system:kube-apiserver
+              name: scheduler-role-binding
               namespace: ""
             roleRef:
               apiGroup: rbac.authorization.k8s.io
               kind: ClusterRole
-              name: system:kube-apiserver-to-kubelet
+              name: scheduler-role
             subjects:
               - apiGroup: rbac.authorization.k8s.io
                 kind: User
@@ -461,42 +494,77 @@
           ansible.builtin.debug:
             var: rbac_binding_status
 
-        - name: Set KUBECONFIG in /etc/profile for login shells
-          ansible.builtin.lineinfile:
-            path: /etc/profile
-            line: "export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig"
-            create: yes
-            state: present
-            regexp: '^export KUBECONFIG='
-            backup: yes  # Backup the file before making changes
-
-        - name: Set KUBECONFIG in /etc/bash.bashrc for interactive non-login shells
-          ansible.builtin.lineinfile:
-            path: /etc/bash.bashrc
-            line: "export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig"
-            create: yes
-            state: present
-            regexp: '^export KUBECONFIG='
-            backup: yes  # Backup the file before making changes
-
-        - name: Reload system-wide profile to apply changes
-          ansible.builtin.shell:
-            cmd: "bash -c 'source /etc/profile'"
-          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
-
-        - name: Reload bashrc to apply changes
-          ansible.builtin.shell:
-            cmd: "bash -c 'source /etc/bash.bashrc'"
-          ignore_errors: yes  # Ignore errors if source fails in non-interactive shell
-
-        - name: Set correct permissions for kubeconfig scheduler
+        - name: Set correct permissions for kubeconfig controller-manager
           ansible.builtin.command:
             cmd: sudo chmod 644 /var/lib/kubernetes/controller-manager.kubeconfig
           register: chmod_status
           changed_when: true
 
+        - name: Create custom ClusterRole for reverse-proxy
+          ansible.builtin.shell: |
+            set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/reverse-proxy.kubeconfig
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              annotations:
+                rbac.authorization.kubernetes.io/autoupdate: "true"
+              labels:
+                kubernetes.io/bootstrapping: rbac-defaults
+              name: reverse-proxy-role
+            rules:
+              - apiGroups:
+                  - ""
+            resources:
+              - pods
+              - services
+              - endpoints
+              - nodes
+              - livez
+            verbs:
+              - "get"
+            EOF
+          register: rbac_status
+          changed_when: false
+          args:
+            executable: /bin/bash
+
+        - name: Bind custom ClusterRole to reverse-proxy
+          ansible.builtin.shell: |
+            set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/reverse-proxy.kubeconfig
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: reverse-proxy-kube-binding
+              namespace: ""
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:kube-apiserver-to-kubelet
+            subjects:
+              - apiGroup: rbac.authorization.k8s.io
+                kind: User
+                name: reverse-proxy
+            EOF
+          register: rbac_binding_status
+          changed_when: false
+          args:
+            executable: /bin/bash
+
+        # Verify the ClusterRole and ClusterRoleBinding for the current user
+        - name: Verify ClusterRole creation for reverse-proxy
+          ansible.builtin.debug:
+            var: rbac_status
+
+        - name: Verify ClusterRoleBinding creation for reverse-proxy
+          ansible.builtin.debug:
+            var: rbac_binding_status
+
         # Create the RBAC ClusterRole for the current user
-        - name: Create system:kube-apiserver-to-kubelet ClusterRole for controller-manager
+        - name: Create custom ClusterRole for controller-manager
           ansible.builtin.shell: |
             set -o pipefail
             export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
@@ -527,7 +595,7 @@
             executable: /bin/bash
 
         # Bind the system:kube-apiserver-to-kubelet ClusterRole to the current user
-        - name: Bind the system:kube-apiserver-to-kubelet ClusterRole to user controller-manager
+        - name: Bind custom ClusterRole to controller-manager
           ansible.builtin.shell: |
             set -o pipefail
             export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
@@ -581,13 +649,16 @@
 
         - name: Make a HTTP request for the Kubernetes version info
           ansible.builtin.shell: |
-            curl --cacert ca.pem https://{{ kubernetes_public_address.stdout | trim }}:6443/version
+            curl --cacert /var/lib/kubernetes/ca.pem \
+                 --cert /var/lib/kubernetes/scheduler.pem \
+                 --key /var/lib/kubernetes/scheduler-key.pem \
+                 https://{{ kubernetes_public_address.stdout | trim }}:6443/version
           changed_when: false
           register: status
           tags:
             - skip_ansible_lint
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
