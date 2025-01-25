@@ -193,8 +193,6 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
-            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.pem", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/ca.pem", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/home/wisccourant/" }
