@@ -87,8 +87,8 @@
             - { source: "gs://kthw-misc/scheduler.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/scheduler-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/reverse-proxy.pem", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/reverse-proxy-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/reverse.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/reverse-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
           changed_when: false
           register: status
@@ -169,44 +169,44 @@
           register: status
           changed_when: false
 
-        - name: Generate kubeconfig file for reverse-proxy
+        - name: Generate kubeconfig file for reverse
           ansible.builtin.shell: |
             kubectl config set-cluster kubernetes-the-hard-way \
               --certificate-authority=/var/lib/kubernetes/ca.pem \
               --embed-certs=true \
               --server=https://127.0.0.1:6443 \
-              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
           changed_when: false
 
-        - name: Set credentials for reverse-proxy in kubeconfig
+        - name: Set credentials for reverse in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-credentials reverse-proxy \
-              --client-certificate=/var/lib/kubernetes/reverse-proxy.pem \
-              --client-key=/var/lib/kubernetes/reverse-proxy-key.pem \
+            kubectl config set-credentials reverse \
+              --client-certificate=/var/lib/kubernetes/reverse.pem \
+              --client-key=/var/lib/kubernetes/reverse-key.pem \
               --embed-certs=true \
-              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
           changed_when: false
 
-        - name: Set context for reverse-proxy in kubeconfig
+        - name: Set context for reverse in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context reverse-proxy-context \
+            kubectl config set-context reverse-context \
               --cluster=kubernetes-the-hard-way \
-              --user=reverse-proxy \
-              --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+              --user=reverse \
+              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
           changed_when: false
 
-        - name: Use context for reverse-proxy kubeconfig
+        - name: Use context for reverse kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context reverse-proxy-context --kubeconfig=/var/lib/kubernetes/reverse-proxy.kubeconfig
+            kubectl config use-context reverse-context --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -425,9 +425,9 @@
           register: chmod_status
           changed_when: true
 
-        - name: Set correct permissions for kubeconfig reverse-proxy
+        - name: Set correct permissions for kubeconfig reverse
           ansible.builtin.command:
-            cmd: sudo chmod 644 /var/lib/kubernetes/reverse-proxy.kubeconfig
+            cmd: sudo chmod 644 /var/lib/kubernetes/reverse.kubeconfig
           register: chmod_status
           changed_when: true
 
