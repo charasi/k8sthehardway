@@ -2,6 +2,7 @@ resource "google_compute_target_pool" "k8_target_pool" {
   name    = "k8-target-pool"
   region  = "us-west1"  # specify your region
   health_checks = [google_compute_http_health_check.k8s_health_check.name]
+  instances = [google_compute_instance_group.k8s_instance_group.instances]
   session_affinity = "NONE"
 }
 
