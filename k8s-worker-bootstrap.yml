@@ -73,11 +73,9 @@
             verbosity: 0
 
         - name: Ensure root ownership of root directory
-          ansible.builtin.file:
-            path: /
-            owner: root
-            group: root
-            recurse: yes
+          ansible.builtin.shell: |
+            sudo chown root:root /
+          changed_when: false
 
         - name: Create the installation directories
           ansible.builtin.shell: |
