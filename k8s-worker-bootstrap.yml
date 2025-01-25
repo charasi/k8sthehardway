@@ -33,7 +33,7 @@
 
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.command:
-            cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /var/lib/kubelet
+            cmd: gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /var/lib/kubelet
             chdir: /home/wisccourant/
           changed_when: false
 
