@@ -107,7 +107,7 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Download certificates from gcp
+        - name: Get POD_CIDR from gcp
           ansible.builtin.shell: |
             POD_CIDR=$(curl -s -H "Metadata-Flavor: Google" \
               http://metadata.google.internal/computeMetadata/v1/instance/attributes/pod-cidr)
