@@ -72,11 +72,6 @@
             var: output
             verbosity: 0
 
-        - name: Ensure root ownership of root directory
-          ansible.builtin.shell: |
-            sudo chown root:root /
-          changed_when: false
-
         - name: Create the installation directories
           ansible.builtin.shell: |
             sudo mkdir -p \
