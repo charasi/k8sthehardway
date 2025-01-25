@@ -2,7 +2,7 @@
 - name: Bootstrapping the Kubernetes Worker Nodes
   hosts: k8workers
   remote_user: wisccourant
-  become: true
+  # become: true
 
   tasks:
     - name: Provision a Kubernetes Worker Node
