@@ -183,40 +183,10 @@
           changed_when: false
 
         - name: Download from gcp and Configure the Kubelet
-          ansible.builtin.shell: |
-            sudo gsutil cp {{ item.source }} {{ item.dest }}
-          loop:
-            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.pem", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/ca.pem", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/static_ip.txt", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/home/wisccourant/" }
-            - { source: "gs://kthw-misc/kube-proxy-key.pem", dest: "/home/wisccourant/" }
-          changed_when: false
-          register: status
-
-        - name: Move to directories
-          ansible.builtin.shell: |
-           sudo mv {{ host_name.stdout | trim }}-key.pem /var/lib/kubelet
-           sudo mv {{ host_name.stdout | trim }}.pem dest: /var/lib/kubelet
-           sudo mv ca.pem var/lib/kubernetes
-           sudo mv static_ip.txt /var/lib/kubernetes/
-           sudo mv kube-proxy.pem /var/lib/kube-proxy/
-           sudo mv kube-proxy-key.pem /var/lib/kube-proxy/
-          args:
+          ansible.builtin.command:
+            cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /home/wisccourant/
             chdir: /home/wisccourant/
           changed_when: false
-          register: status
-
-        - name: Verify cmd process successfully
-          ansible.builtin.debug:
-            var: status
-            verbosity: 0
-
-        - name: Verify cmd process successfully
-          ansible.builtin.debug:
-            var: status
-            verbosity: 0
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
