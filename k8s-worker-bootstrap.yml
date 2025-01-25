@@ -18,6 +18,13 @@
               /var/run/kubernetes
           changed_when: false
 
+        - name: Ensure /var/lib/kubelet is owned by root:root
+          ansible.builtin.file:
+            path: /var/lib/kubelet
+            owner: root
+            group: root
+            recurse: yes
+
         - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.command:
             cmd: hostname
@@ -26,7 +33,7 @@
 
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.command:
-            cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /home/wisccourant/
+            cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /var/lib/kubelet
             chdir: /home/wisccourant/
           changed_when: false
 
