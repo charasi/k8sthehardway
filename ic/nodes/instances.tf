@@ -33,7 +33,7 @@ resource "google_compute_instance" "controllers" {
 
 resource "google_compute_instance" "workers" {
     count = 3
-    name = "workers-${count.index}"
+    name = "worker-${count.index}"
     network_interface {
       network = var.network_name
       subnetwork = var.subnetwork_name
