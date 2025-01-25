@@ -49,14 +49,14 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11b991980c145c44f8f6adaa4f01a2cc6b'
+    password = '11d019208a104ae8f17cf7f47fbe4f1044'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
 
     # Step 6: Install Jenkins plugins
     # Define a list of plugins to install on the Jenkins server
-    plugins_list = ['ansible@403.v8d0ca_dcb_b_502', 'blueocean@1.27.16']
+    plugins_list = ['ansible@500.v7564a_db_8feec', 'blueocean@1.27.16']
     jenkins_tasks.install_plugins(jenkins, plugins_list)  # Install the plugins via Jenkins API
 
     # Step 7: Create a new Jenkins agent node
@@ -162,6 +162,22 @@ def main():
         config_xml = file.read()
 
     job = jenkins_tasks.create_jobs(jenkins, "create-controllers", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./rbac.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-rbac", config_xml)
 
     jenkins.build_job(job.name)
 
