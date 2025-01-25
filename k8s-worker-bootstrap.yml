@@ -18,6 +18,12 @@
               /var/run/kubernetes
           changed_when: false
 
+        - name: Retrieve the internal IP address for the current compute instance
+          ansible.builtin.command:
+            cmd: hostname
+          register: host_name
+          changed_when: false
+
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.command:
             cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /home/wisccourant/
@@ -180,12 +186,6 @@
           ansible.builtin.command:
             cmd: hostname -I
           register: ip_address
-          changed_when: false
-
-        - name: Retrieve the internal IP address for the current compute instance
-          ansible.builtin.command:
-            cmd: hostname
-          register: host_name
           changed_when: false
 
         - name: Download from gcp and Configure the Kubelet
