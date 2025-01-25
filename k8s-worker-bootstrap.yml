@@ -72,13 +72,6 @@
             var: output
             verbosity: 0
 
-        - name: Ensure root ownership of root directory
-          ansible.builtin.file:
-            path: /
-            owner: root
-            group: root
-          become: true
-
         - name: Create the installation directories
           ansible.builtin.shell: |
             sudo mkdir -p \
@@ -193,6 +186,8 @@
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/home/wisccourant/" }
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.pem", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/ca.pem", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/home/wisccourant/" }
             - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/home/wisccourant/" }
