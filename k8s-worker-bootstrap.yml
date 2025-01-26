@@ -131,7 +131,7 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -224,7 +224,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -241,7 +241,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -320,7 +320,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -358,14 +358,14 @@
               --container-runtime=remote \\
               --container-runtime-endpoint=unix:///var/run/cri-containerd.sock \\
               --image-pull-progress-deadline=2m \\
-              --kubeconfig=/var/lib/kubelet/kubeconfig \\
+              --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
               --network-plugin=cni \\
               --pod-cidr=${POD_CIDR} \\
               --register-node=true \\
               --require-kubeconfig \\
               --runtime-request-timeout=15m \\
-              --tls-cert-file=/var/lib/kubelet/${HOSTNAME}.pem \\
-              --tls-private-key-file=/var/lib/kubelet/${HOSTNAME}-key.pem \\
+              --tls-cert-file=/var/lib/kubelet/{{ host_name.stdout | trim }}.pem \\
+              --tls-private-key-file=/var/lib/kubelet/{{ host_name.stdout | trim }}-key.pem \\
               --v=2
             Restart=on-failure
             RestartSec=5
@@ -377,7 +377,35 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Create the kube-proxy.service systemd unit file
+          ansible.builtin.shell: |
+            cat > kube-proxy.service <<EOF
+            [Unit]
+            Description=Kubernetes Kube Proxy
+            Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+            [Service]
+            ExecStart=/usr/local/bin/kube-proxy \\
+              --cluster-cidr=10.200.0.0/16 \\
+              --kubeconfig=/var/lib/kube-proxy/kube-proxy.kubeconfig \\
+              --proxy-mode=iptables \\
+              --v=2
+            Restart=on-failure
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+          args:
+            chdir: /home/wisccourant/
+          changed_when: false
+
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
