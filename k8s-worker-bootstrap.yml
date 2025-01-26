@@ -82,7 +82,7 @@
               /var/lib/kubernetes \
               /var/run/kubernetes
             sudo chown root:root /
-            changed_when: false
+          changed_when: false
 
         - name: Extract the CNI plugins for Kubernetes
           ansible.builtin.command:
