@@ -106,6 +106,7 @@
           ansible.builtin.unarchive:
             src: "/home/wisccourant/containerd-1.7.0-linux-amd64.tar.gz"
             dest: "/usr/local/"
+            remote_src: yes
 
 
         - name: Create symlink for containerd binary
