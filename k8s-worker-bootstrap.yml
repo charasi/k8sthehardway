@@ -24,9 +24,21 @@
             var: output
             verbosity: 0
 
-        - name: Download cri-containerd
+        - name: Download containerd
           ansible.builtin.get_url:
             url: "https://github.com/containerd/containerd/releases/download/v1.7.0/containerd-1.7.0-linux-amd64.tar.gz"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Download runc
+          ansible.builtin.get_url:
+            url: "https://github.com/opencontainers/runc/releases/download/v1.2.4/runc.386"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
@@ -92,9 +104,25 @@
 
         - name: Extract and place in root directory
           ansible.builtin.command:
-            cmd: sudo tar -xvf cri-containerd-1.1.0-rc.1.linux-amd64.tar.gz -C /
+            cmd: sudo tar -xvf containerd-1.7.0-linux-amd64.tar.gz
             chdir: /home/wisccourant/
           changed_when: false
+
+        - name: Move containerd binaries to /usr/local/bin
+          ansible builtin command:
+            cmd: mv /home/wisccourant/containerd-1.7.0-linux-amd64/* /usr/local/bin/
+            chdir: /home/wisccourant/
+          args:
+            creates: /usr/local/bin/containerd
+          changed_when: false
+
+        - name: Move runc binary to /usr/local/bin and rename it
+          ansible.builtin.command:
+            cmd: mv /home/wisccourant/runc.amd64 /usr/local/bin/runc
+            chdir: /home/wisccourant/
+          args:
+            creates: /usr/local/bin/runc  # Prevents moving if 'runc' already exists
+          changed_when: true
 
         - name: Make Kubernetes binaries executable
           ansible.builtin.command:
@@ -362,7 +390,6 @@
             [Service]
             ExecStart=/usr/local/bin/kubelet \\
               --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
-              --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
               --pod-cidr=${POD_CIDR} \\
               --register-node=true \\
               --runtime-request-timeout=15m \\
