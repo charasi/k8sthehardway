@@ -512,14 +512,42 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Start the Worker Services
+        - name: Pause for 10 seconds
+          ansible.builtin.pause:
+            seconds: 10
+
+        - name: Set correct permissions for kubeconfig kubelet
           ansible.builtin.command:
-            cmd: kubectl get nodes
-            chdir: /home/wisccourant/
+            cmd: sudo chmod 644 /var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
+          register: chmod_status
+          changed_when: true
+
+        - name: Set correct permissions for kubeconfig kube-proxy
+          ansible.builtin.command:
+            cmd: sudo chmod 644 /var/lib/kube-proxy/kube-proxy.kubeconfig
+          register: chmod_status
+          changed_when: true
+
+        - name: Verify services are running
+          ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
+            kubectl get nodes
           register: output
           changed_when: false
 
-        - name: Verify cmd process successfully
+        - name: Get output
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
+        - name: Verify services are running
+          ansible.builtin.shell: |
+            export KUBECONFIG=/var/lib/kube-proxy/kube-proxy.kubeconfig
+            kubectl get nodes
+          register: output
+          changed_when: false
+
+        - name: Get output
           ansible.builtin.debug:
             var: output
             verbosity: 0
