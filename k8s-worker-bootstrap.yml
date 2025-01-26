@@ -173,6 +173,7 @@
 
         - name: Download from gcp and Configure the Kubelet
           ansible.builtin.shell: |
+            sudo chown root:root /
             sudo gsutil cp {{ item.source }} {{ item.dest }}
           loop:
             - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/var/lib/kubelet/" }
