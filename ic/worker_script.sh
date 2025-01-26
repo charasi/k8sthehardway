@@ -27,7 +27,7 @@ sudo mkdir -p /var/run/kubernetes
 
 sudo chown root:root /etc/cni/net.d
 sudo chown root:root /opt/cni/bin
-sudo chown root:root /var/lib/kubelet/
+sudo chown root:root /var/lib/kubelet
 sudo chown root:root /var/lib/kube-proxy
 sudo chown root:root /var/lib/kubernetes
 sudo chown root:root /var/run/kubernetes
