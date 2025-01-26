@@ -426,13 +426,13 @@
             Description=containerd container runtime
             Documentation=https://containerd.io
             After=network.target local-fs.target
-            
+      
             [Service]
-          #uncomment to enable the experimental sbservice (sandboxed) version of containerd/cri integration
-          #Environment="ENABLE_CRI_SANDBOXES=sandboxed"
+            # Uncomment to enable the experimental sbservice (sandboxed) version of containerd/cri integration
+            # Environment="ENABLE_CRI_SANDBOXES=sandboxed"
             ExecStartPre=-/sbin/modprobe overlay
             ExecStart=/usr/local/bin/containerd
-            
+      
             Type=notify
             Delegate=yes
             KillMode=process
@@ -447,7 +447,7 @@
             # Only systemd 226 and above support this version.
             TasksMax=infinity
             OOMScoreAdjust=-999
-            
+      
             [Install]
             WantedBy=multi-user.target
             EOF
@@ -519,7 +519,7 @@
           register: output
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: output
             verbosity: 0
