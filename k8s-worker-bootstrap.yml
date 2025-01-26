@@ -26,7 +26,7 @@
 
         - name: Download cri-containerd
           ansible.builtin.get_url:
-            url: "https://storage.googleapis.com/cri-containerd-release/cri-containerd-1.1.0-rc.1.linux-amd64.tar.gz"
+            url: "https://github.com/containerd/containerd/releases/download/v1.7.0/containerd-1.7.0-linux-amd64.tar.gz"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
