@@ -363,10 +363,8 @@
             ExecStart=/usr/local/bin/kubelet \\
               --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
               --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
-              --network-plugin=cni \\
               --pod-cidr=${POD_CIDR} \\
               --register-node=true \\
-              --require-kubeconfig \\
               --runtime-request-timeout=15m \\
               --tls-cert-file=/var/lib/kubelet/{{ host_name.stdout | trim }}.pem \\
               --tls-private-key-file=/var/lib/kubelet/{{ host_name.stdout | trim }}-key.pem \\
