@@ -102,26 +102,32 @@
             chdir: /home/wisccourant/
           changed_when: false
 
-        - name: Extract and place in root directory
-          ansible.builtin.command:
-            cmd: sudo tar -xvf containerd-1.7.0-linux-amd64.tar.gz
-            chdir: /home/wisccourant/
-          changed_when: false
+        - name: Extract containerd to /usr/local
+          ansible.builtin.unarchive:
+            src: "/home/wisccourant/containerd-1.7.0-linux-amd64.tar.gz"
+            dest: "/usr/local/"
 
-        - name: Move containerd binaries to /usr/local/bin
-          ansible.builtin.command:
-            cmd: mv /home/wisccourant/bin/* /usr/local/bin/
-            chdir: /home/wisccourant/
-          args:
-            creates: /usr/local/bin/containerd
-          changed_when: false
+        - name: Create symlink for containerd binary
+          ansible.builtin.file:
+            src: "/usr/local/bin/containerd"
+            dest: "/usr/bin/containerd"
+            state: link
 
-        - name: Move runc binary to /usr/local/bin and rename it
+        # Install runc
+        - name: Download and install runc
+          ansible.builtin.get_url:
+            url: "https://github.com/opencontainers/runc/releases/download/v1.2.4/runc.amd64"
+            dest: "/home/wisccourant/"
+            mode: '0755'
+
+        - name: Make runc executable
+          ansible.builtin.file:
+            path: "/home/wisccourant/runc.amd64"
+            mode: "u+x"
+
+        - name: Move runc to /usr/local/bin
           ansible.builtin.command:
             cmd: mv /home/wisccourant/runc.amd64 /usr/local/bin/runc
-            chdir: /home/wisccourant/
-          args:
-            creates: /usr/local/bin/runc  # Prevents moving if 'runc' already exists
           changed_when: true
 
         - name: Make Kubernetes binaries executable
