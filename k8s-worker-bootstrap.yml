@@ -7,25 +7,6 @@
   tasks:
     - name: Provision a Kubernetes Worker Node
       block:
-        - name: Ensure /var/lib/kubelet is owned by root:root
-          ansible.builtin.file:
-            path: /var/lib/kubelet
-            owner: root
-            group: root
-            recurse: yes
-
-        - name: Retrieve the internal IP address for the current compute instance
-          ansible.builtin.command:
-            cmd: hostname
-          register: host_name
-          changed_when: false
-
-        - name: Download from gcp and Configure the Kubelet
-          ansible.builtin.command:
-            cmd: gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /var/lib/kubelet
-            chdir: /home/wisccourant/
-          changed_when: false
-
         - name: Install the OS dependencies
           ansible.builtin.command:
             cmd: sudo apt-get -y install socat
@@ -90,6 +71,17 @@
           ansible.builtin.debug:
             var: output
             verbosity: 0
+
+        - name: Create the installation directories
+          ansible.builtin.shell: |
+            sudo mkdir -p \
+              /etc/cni/net.d \
+              /opt/cni/bin \
+              /var/lib/kubelet \
+              /var/lib/kube-proxy \
+              /var/lib/kubernetes \
+              /var/run/kubernetes
+          changed_when: false
 
         - name: Extract the CNI plugins for Kubernetes
           ansible.builtin.command:
@@ -184,11 +176,34 @@
           register: ip_address
           changed_when: false
 
-        - name: Download from gcp and Configure the Kubelet
+        - name: Retrieve the internal IP address for the current compute instance
           ansible.builtin.command:
-            cmd: sudo gsutil cp gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem /home/wisccourant/
-            chdir: /home/wisccourant/
+            cmd: hostname
+          register: host_name
           changed_when: false
+
+        - name: Download from gcp and Configure the Kubelet
+          ansible.builtin.shell: |
+            sudo gsutil cp {{ item.source }} {{ item.dest }}
+          loop:
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}-key.pem", dest: "/var/lib/kubelet/" }
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.pem", dest: "/var/lib/kubelet/" }
+            - { source: "gs://kthw-misc/ca.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/var/lib/kube-proxy/" }
+            - { source: "gs://kthw-misc/kube-proxy-key.pem", dest: "/var/lib/kube-proxy/" }
+          changed_when: false
+          register: status
+
+        - name: Verify cmd process successfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
+
+        - name: Verify cmd process successfully
+          ansible.builtin.debug:
+            var: status
+            verbosity: 0
 
         - name: Read the IP address from the text file
           ansible.builtin.command:
