@@ -109,7 +109,7 @@
           changed_when: false
 
         - name: Move containerd binaries to /usr/local/bin
-          ansible builtin command:
+          ansible.builtin.command:
             cmd: mv /home/wisccourant/containerd-1.7.0-linux-amd64/* /usr/local/bin/
             chdir: /home/wisccourant/
           args:
