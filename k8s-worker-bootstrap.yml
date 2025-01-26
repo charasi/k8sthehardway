@@ -361,11 +361,6 @@
 
             [Service]
             ExecStart=/usr/local/bin/kubelet \\
-              --anonymous-auth=false \\
-              --authorization-mode=Webhook \\
-              --client-ca-file=/var/lib/kubernetes/ca.pem \\
-              --cluster-dns=10.32.0.10 \\
-              --cluster-domain=cluster.local \\
               --container-runtime=remote \\
               --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
               --image-pull-progress-deadline=2m \\
