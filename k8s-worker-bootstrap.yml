@@ -361,7 +361,6 @@
 
             [Service]
             ExecStart=/usr/local/bin/kubelet \\
-              --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
               --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
               --pod-cidr=${POD_CIDR} \\
               --register-node=true \\
