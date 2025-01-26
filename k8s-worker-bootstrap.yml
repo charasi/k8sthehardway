@@ -230,7 +230,7 @@
               --certificate-authority=/var/lib/kubernetes/ca.pem \
               --embed-certs=true \
               --server=https://{{ kubernetes_public_address.stdout | trim }}:6443 \
-              --kubeconfig={{ host_name.stdout | trim }}.kubeconfig
+              --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
           args:
             chdir: /var/lib/kubelet/
           register: status
