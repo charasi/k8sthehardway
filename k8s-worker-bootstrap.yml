@@ -72,6 +72,18 @@
             var: output
             verbosity: 0
 
+        - name: Create the installation directories
+          ansible.builtin.shell: |
+            sudo mkdir -p \
+              /etc/cni/net.d \
+              /opt/cni/bin \
+              /var/lib/kubelet \
+              /var/lib/kube-proxy \
+              /var/lib/kubernetes \
+              /var/run/kubernetes
+            sudo chown root:root /
+            changed_when: false
+
         - name: Extract the CNI plugins for Kubernetes
           ansible.builtin.command:
             cmd: sudo tar -xvf cni-plugins-linux-amd64-v1.6.2.tgz -C /opt/cni/bin/
@@ -344,8 +356,8 @@
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-            After=cri-containerd.service
-            Requires=cri-containerd.service
+            After=containerd.service
+            Requires=containerd.service
 
             [Service]
             ExecStart=/usr/local/bin/kubelet \\
@@ -356,7 +368,7 @@
               --cluster-dns=10.32.0.10 \\
               --cluster-domain=cluster.local \\
               --container-runtime=remote \\
-              --container-runtime-endpoint=unix:///var/run/cri-containerd.sock \\
+              --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
               --image-pull-progress-deadline=2m \\
               --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
               --network-plugin=cni \\
@@ -424,7 +436,7 @@
 
         - name: Enable
           ansible.builtin.command:
-            cmd: sudo systemctl enable containerd cri-containerd kubelet kube-proxy
+            cmd: sudo systemctl enable containerd kubelet kube-proxy
             chdir: /home/wisccourant/
           changed_when: false
 
