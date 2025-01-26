@@ -442,7 +442,7 @@
 
         - name: Start the Worker Services
           ansible.builtin.command:
-            cmd: sudo systemctl start containerd cri-containerd kubelet kube-proxy
+            cmd: sudo systemctl start containerd kubelet kube-proxy
             chdir: /home/wisccourant/
           changed_when: false
 
