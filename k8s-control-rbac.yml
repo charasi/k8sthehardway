@@ -98,7 +98,7 @@
                   - nodes
                   - livez
                 verbs:
-                  - "get"          
+                  - "get"
             EOF
           register: rbac_status
           changed_when: false

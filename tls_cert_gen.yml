@@ -405,6 +405,8 @@
           loop:
             - { source: "/home/wisccourant/certificates/kubernetes-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/kubernetes.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/admin-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/admin.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 

@@ -16,3 +16,6 @@ k8controllers3 ansible_ssh_host=10.240.0.12 ansible_ssh_port=22 ansible_user=wis
 
 [k8controller1]
 k8controller1 ansible_ssh_host=10.240.0.10 ansible_ssh_port=22 ansible_user=wisccourant
+
+[k8worker1]
+k8workers1 ansible_ssh_host=10.240.0.20 ansible_ssh_port=22 ansible_user=wisccourant

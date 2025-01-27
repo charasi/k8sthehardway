@@ -123,3 +123,27 @@ resource "google_storage_bucket_object" "reverse_proxy" {
   name   = "nginx.conf"
   source = "../certificates/nginx.conf"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "worker_0" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "worker-0.yml"
+  source = "../certificates/worker-0.yml"
+  content_type  = "application/x-yaml"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "worker_1" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "worker-1.yml"
+  source = "../certificates/worker-1.yml"
+  content_type  = "application/x-yaml"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "worker_2" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "worker-2.yml"
+  source = "../certificates/worker-2.yml"
+  content_type  = "application/x-yaml"
+}

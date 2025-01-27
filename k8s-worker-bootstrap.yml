@@ -106,8 +106,7 @@
           ansible.builtin.unarchive:
             src: "/home/wisccourant/containerd-1.7.0-linux-amd64.tar.gz"
             dest: "/usr/local/"
-            remote_src: yes
-
+            remote_src: true
 
         - name: Create symlink for containerd binary
           ansible.builtin.file:
@@ -148,16 +147,18 @@
           ansible.builtin.shell: |
             POD_CIDR=$(curl -s -H "Metadata-Flavor: Google" \
               http://metadata.google.internal/computeMetadata/v1/instance/attributes/pod-cidr)
+            echo $POD_CIDR
           changed_when: false
-          register: status
+          register: pod_cidr
 
         - name: Verify cmd process successfully
           ansible.builtin.debug:
-            var: status
+            var: pod_cidr
             verbosity: 0
 
         - name: Create the bridge network configuration file
           ansible.builtin.shell: |
+            set -o pipefail
             cat > 10-bridge.conf <<EOF
             {
                 "cniVersion": "0.3.1",
@@ -169,7 +170,7 @@
                 "ipam": {
                     "type": "host-local",
                     "ranges": [
-                      [{"subnet": "${POD_CIDR}"}]
+                      [{"subnet": "{{ pod_cidr.stout | trim }}"}]
                     ],
                     "routes": [{"dst": "0.0.0.0/0"}]
                 }
@@ -230,6 +231,7 @@
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/var/lib/kube-proxy/" }
             - { source: "gs://kthw-misc/kube-proxy-key.pem", dest: "/var/lib/kube-proxy/" }
+            - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.yml", dest: "/var/lib/kubelet/" }
           changed_when: false
           register: status
 
@@ -398,11 +400,7 @@
             [Service]
             ExecStart=/usr/local/bin/kubelet \\
               --kubeconfig=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig \\
-              --pod-cidr=${POD_CIDR} \\
-              --register-node=true \\
-              --runtime-request-timeout=15m \\
-              --tls-cert-file=/var/lib/kubelet/{{ host_name.stdout | trim }}.pem \\
-              --tls-private-key-file=/var/lib/kubelet/{{ host_name.stdout | trim }}-key.pem \\
+              --config=/var/lib/kubelet/{{ host_name.stdout | trim }}.yml \\
               --v=2
             Restart=on-failure
             RestartSec=5
@@ -426,13 +424,13 @@
             Description=containerd container runtime
             Documentation=https://containerd.io
             After=network.target local-fs.target
-      
+
             [Service]
             # Uncomment to enable the experimental sbservice (sandboxed) version of containerd/cri integration
             # Environment="ENABLE_CRI_SANDBOXES=sandboxed"
             ExecStartPre=-/sbin/modprobe overlay
             ExecStart=/usr/local/bin/containerd
-      
+
             Type=notify
             Delegate=yes
             KillMode=process
@@ -447,7 +445,7 @@
             # Only systemd 226 and above support this version.
             TasksMax=infinity
             OOMScoreAdjust=-999
-      
+
             [Install]
             WantedBy=multi-user.target
             EOF
@@ -527,4 +525,3 @@
             cmd: sudo chmod 644 /var/lib/kube-proxy/kube-proxy.kubeconfig
           register: chmod_status
           changed_when: true
-

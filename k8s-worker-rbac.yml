@@ -73,6 +73,13 @@
       ansible.builtin.debug:
         var: rbac_binding_status
 
+# This part will run only on the kube-proxy node:
+- name: Add RBAC for kube-proxy (only on the kube-proxy node)
+  hosts: k8worker1  # Define the node where kube-proxy runs in your inventory
+  remote_user: wisccourant
+  become: true
+
+  tasks:
     - name: Create custom ClusterRole for kube-proxy
       ansible.builtin.shell: |
         set -o pipefail
@@ -134,15 +141,3 @@
     - name: Verify ClusterRoleBinding creation for kube-proxy
       ansible.builtin.debug:
         var: rbac_binding_status
-
-    - name: Verify services are running
-      ansible.builtin.shell: |
-        export KUBECONFIG=/var/lib/kubelet/{{ host_name.stdout | trim }}.kubeconfig
-        kubectl get nodes
-      register: output
-      changed_when: false
-
-    - name: Get output
-      ansible.builtin.debug:
-        var: output
-        verbosity: 0
