@@ -158,7 +158,6 @@
 
         - name: Create the bridge network configuration file
           ansible.builtin.shell: |
-            set -o pipefail
             cat > /home/wisccourant/10-bridge.conf <<EOF
             {
                 "cniVersion": "0.3.1",
