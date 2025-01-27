@@ -159,7 +159,7 @@
         - name: Create the bridge network configuration file
           ansible.builtin.shell: |
             set -o pipefail
-            cat > 10-bridge.conf <<EOF
+            cat > /home/wisccourant/10-bridge.conf <<EOF
             {
                 "cniVersion": "0.3.1",
                 "name": "bridge",
@@ -170,7 +170,7 @@
                 "ipam": {
                     "type": "host-local",
                     "ranges": [
-                      [{"subnet": "{{ pod_cidr.stout | trim }}"}]
+                      [{"subnet": "{{ pod_cidr.stdout | trim }}"}]
                     ],
                     "routes": [{"dst": "0.0.0.0/0"}]
                 }
@@ -178,12 +178,11 @@
             EOF
           args:
             chdir: /home/wisccourant/
-          changed_when: false
+          changed_when: true
 
-        - name: Verify cmd process successfully
+        - name: Verify bridge configuration file was created
           ansible.builtin.debug:
-            var: status
-            verbosity: 0
+            msg: "Bridge configuration file created at /home/wisccourant/10-bridge.conf"
 
         - name: Create the loopback network configuration file
           ansible.builtin.shell: |
