@@ -212,7 +212,6 @@
           ansible.builtin.debug:
             var: rbac_binding_status
 
-        # Create the RBAC ClusterRole for the controller-manager
         - name: Create custom ClusterRole for controller-manager
           ansible.builtin.shell: |
             set -o pipefail
@@ -230,13 +229,6 @@
               - apiGroups:
                   - ""
                 resources:
-                  - nodes
-                  - pods
-                  - services
-                  - deployments
-                  - replicationcontrollers
-                  - endpoints
-                  - namespaces
                   - componentstatuses
                 verbs:
                   - get
@@ -267,7 +259,6 @@
           args:
             executable: /bin/bash
 
-        # Bind the system:controller-manager ClusterRole to the controller-manager service account
         - name: Bind custom ClusterRole to controller-manager
           ansible.builtin.shell: |
             set -o pipefail
@@ -281,10 +272,10 @@
             roleRef:
               apiGroup: rbac.authorization.k8s.io
               kind: ClusterRole
-              name: system:controller-manager
+              name: system:controller-manager  # Ensure this matches the ClusterRole name
             subjects:
               - kind: ServiceAccount
-                name: controller-manager
+                name: controller-manager  # Ensure this is the correct service account
                 namespace: kube-system
             EOF
           register: rbac_binding_status
