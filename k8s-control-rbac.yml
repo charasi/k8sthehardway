@@ -7,7 +7,7 @@
   tasks:
     - name: Provision the Kubernetes Control Plane
       block:
-        - name: Create custom ClusterRole for scheduler
+        - name: Create custom ClusterRole for admin
           ansible.builtin.shell: |
             set -o pipefail
             export KUBECONFIG=/var/lib/kubernetes/admin.kubeconfig
