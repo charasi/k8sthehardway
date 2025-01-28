@@ -7,7 +7,7 @@
   tasks:
     - name: Provision the Kubernetes Control Plane
       block:
-        - name: Set correct permissions for kubeconfig controller-manager
+        - name: Set correct permissions for kubeconfig admin
           ansible.builtin.command:
             cmd: sudo chmod 644 /var/lib/kubernetes/admin.kubeconfig
           register: chmod_status
