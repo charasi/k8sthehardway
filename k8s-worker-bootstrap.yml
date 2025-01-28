@@ -12,6 +12,18 @@
             cmd: sudo apt-get -y install socat
           changed_when: false
 
+        - name: Download cri-tools
+          ansible.builtin.get_url:
+            url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.32.0/crictl-v1.32.0-linux-amd64.tar.gz"
+            dest: /home/wisccourant/
+            mode: '0755'
+          register: output
+
+        - name: Print information from the previous task
+          ansible.builtin.debug:
+            var: output
+            verbosity: 0
+
         - name: Download cni plugins
           ansible.builtin.get_url:
             url: "https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz"
@@ -114,6 +126,17 @@
             dest: "/usr/bin/containerd"
             state: link
 
+        - name: Extract cri-tools tarball
+          ansible.builtin.unarchive:
+            src: /home/wisccourant/crictl-v1.32.0-linux-amd64.tar.gz
+            dest: /home/wisccourant/
+            remote_src: yes
+
+        - name: Move crictl binary to /usr/local/bin
+          ansible.builtin.command:
+            cmd: mv /home/wisccourant/crictl /usr/local/bin/
+            creates: /usr/local/bin/crictl
+
         # Install runc
         - name: Download and install runc
           ansible.builtin.get_url:
@@ -142,6 +165,26 @@
             cmd: sudo mv kubectl kube-proxy kubelet /usr/local/bin/
             chdir: /home/wisccourant/
           changed_when: false
+
+        - name: Ensure containerd config directory exists
+          ansible.builtin.file:
+            path: /etc/containerd
+            state: directory
+            mode: '0755'
+
+        # Write the containerd config.toml file
+        - name: Create /etc/containerd/config.toml file
+          ansible.builtin.copy:
+            dest: /etc/containerd/config.toml
+            content: |
+              [plugins]
+                [plugins.cri.containerd]
+                  snapshotter = "overlayfs"
+                  [plugins.cri.containerd.default_runtime]
+                    runtime_type = "io.containerd.runtime.v1.linux"
+                    runtime_engine = "/usr/local/bin/runc"
+                    runtime_root = ""
+            mode: '0644'
 
         - name: Get POD_CIDR from gcp
           ansible.builtin.shell: |
@@ -305,7 +348,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
@@ -352,7 +395,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0

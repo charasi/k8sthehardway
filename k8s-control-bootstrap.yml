@@ -7,7 +7,7 @@
   tasks:
     - name: Provision the Kubernetes Control Plane
       block:
-        - name: Download the Kubernetes Controller Binaries
+        - name: Download the Kubernetes kube-apiserver
           ansible.builtin.get_url:
             url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-apiserver"
             dest: /home/wisccourant/
@@ -19,7 +19,7 @@
             var: output
             verbosity: 0
 
-        - name: Download the Kubernetes Controller Binaries
+        - name: Download the Kubernetes controller-manager
           ansible.builtin.get_url:
             url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-controller-manager"
             dest: /home/wisccourant/
@@ -31,7 +31,7 @@
             var: output
             verbosity: 0
 
-        - name: Download the Kubernetes Controller Binaries
+        - name: Download the Kubernetes kube-scheduler
           ansible.builtin.get_url:
             url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-scheduler"
             dest: /home/wisccourant/
@@ -43,7 +43,7 @@
             var: output
             verbosity: 0
 
-        - name: Download the Kubernetes Controller Binaries
+        - name: Download the Kubernetes kubectl
           ansible.builtin.get_url:
             url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl"
             dest: /home/wisccourant/
@@ -90,6 +90,8 @@
             - { source: "gs://kthw-misc/reverse.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/reverse-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
+            - { source: "gs://kthw-misc/service-account.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/service-account-key.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
@@ -272,7 +274,7 @@
               --audit-log-maxbackup=3 \\
               --audit-log-maxsize=100 \\
               --audit-log-path=/var/log/audit.log \\
-              --authorization-mode=Node,AlwaysAllow \\
+              --authorization-mode=Node,RBAC \\
               --bind-address=0.0.0.0 \\
               --client-ca-file=/var/lib/kubernetes/ca.pem \\
               --etcd-cafile=/var/lib/kubernetes/ca.pem \\
@@ -285,9 +287,9 @@
               --kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem \\
               --kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem \\
               --runtime-config=api/all=true \\
-              --service-account-key-file=/var/lib/kubernetes/ca-key.pem \\
-              --service-account-signing-key-file=/var/lib/kubernetes/kubernetes-key.pem \\
-              --service-account-issuer=kubernetes.default.svc \\
+              --service-account-key-file=/var/lib/kubernetes/service-account.pem \\
+              --service-account-signing-key-file=/var/lib/kubernetes/service-account-key.pem \\
+              --service-account-issuer=https://{{ kubernetes_public_address.stdout | trim }}:6443 \\
               --service-cluster-ip-range=10.32.0.0/24 \\
               --service-node-port-range=30000-32767 \\
               --tls-cert-file=/var/lib/kubernetes/kubernetes.pem \\
@@ -320,7 +322,6 @@
             [Service]
             ExecStart=/usr/local/bin/kube-controller-manager \\
               --bind-address=0.0.0.0 \\
-              --client-ca-file=/var/lib/kubernetes/ca.pem \\
               --cluster-cidr=10.200.0.0/16 \\
               --cluster-name=kubernetes \\
               --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
@@ -328,8 +329,9 @@
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig \\
               --leader-elect=true \\
               --root-ca-file=/var/lib/kubernetes/ca.pem \\
-              --service-account-private-key-file=/var/lib/kubernetes/ca-key.pem \\
+              --service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \\
               --service-cluster-ip-range=10.32.0.0/24 \\
+              --use-service-account-credentials=true \\
               --v=2
             Restart=on-failure
             RestartSec=5

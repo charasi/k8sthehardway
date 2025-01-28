@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11d019208a104ae8f17cf7f47fbe4f1044'
+    password = '11b8ea237201cd102f140750de933880f3'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -125,6 +125,7 @@ def main():
         print(f"Build {job.build_id} did not pass.")
         exit(1)
 
+    
     # Read the config.xml file
     with open("./certificates.xml", 'r') as file:
         config_xml = file.read()
@@ -140,6 +141,11 @@ def main():
     if job.get_last_build().get_status() != 'SUCCESS':
         print(f"Build {job.build_id} did not pass.")
         exit(1)
+
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin-key.pem", "/home/charasi/cmu/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin.pem", "/home/charasi/cmu/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/kubelet")
 
     # Read the config.xml file
     with open("./etcd.xml", 'r') as file:
@@ -194,6 +200,22 @@ def main():
         config_xml = file.read()
 
     job = jenkins_tasks.create_jobs(jenkins, "create-workers", config_xml)
+
+    jenkins.build_job(job.name)
+
+    while job.is_running():
+        print(f"Build {job.build_id} is still running...")
+        time.sleep(10)
+
+    if job.get_last_build().get_status() != 'SUCCESS':
+        print(f"Build {job.build_id} did not pass.")
+        exit(1)
+
+    # Read the config.xml file
+    with open("./worker_rbac.xml", 'r') as file:
+        config_xml = file.read()
+
+    job = jenkins_tasks.create_jobs(jenkins, "create-workers_rbac", config_xml)
 
     jenkins.build_job(job.name)
 
