@@ -92,6 +92,8 @@
             - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
             - { source: "gs://kthw-misc/service-account.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/service-account-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/admin.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/admin.pem-key.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
@@ -127,6 +129,49 @@
         - name: Use the IP address
           ansible.builtin.debug:
             msg: "The extracted IP address is: {{ kubernetes_public_address.stdout }}"
+
+        - name: Generate kubeconfig file for admin user
+          ansible.builtin.shell: |
+            kubectl config set-cluster kubernetes-the-hard-way \
+              --certificate-authority=/var/lib/kubernetes/ca.pem \
+              --embed-certs=true \
+              --server=https://127.0.0.1:6443 \
+              --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set credentials for admin in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-credentials admin \
+              --client-certificate=/var/lib/kubernetes/admin.pem \
+              --client-key=/var/lib/kubernetes/admin-key.pem \
+              --embed-certs=true \
+              --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Set context for admin in kubeconfig
+          ansible.builtin.shell: |
+            kubectl config set-context default \
+              --cluster=kubernetes-the-hard-way \
+              --user=admin \
+              --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
+
+        - name: Use context for controller-manager kubeconfig
+          ansible.builtin.shell: |
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+          args:
+            chdir: /var/lib/kubernetes/
+          register: status
+          changed_when: false
 
         - name: Generate kubeconfig file for controller-manager
           ansible.builtin.shell: |
