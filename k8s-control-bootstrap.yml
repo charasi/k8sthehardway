@@ -93,7 +93,7 @@
             - { source: "gs://kthw-misc/service-account.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/service-account-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/admin.pem", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/admin.pem-key.pem", dest: "/var/lib/kubernetes/" }
+            - { source: "gs://kthw-misc/admin-key.pem", dest: "/var/lib/kubernetes/" }
           changed_when: false
           register: status
 
