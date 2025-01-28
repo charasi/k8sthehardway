@@ -10,8 +10,8 @@
         - name: Create custom ClusterRole for scheduler
           ansible.builtin.shell: |
             set -o pipefail
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
-            cat <<EOF | kubectl apply -f -
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
+            cat <<EOF | kubectl apply --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRole
             metadata:
@@ -40,8 +40,8 @@
         - name: Bind custom ClusterRole to scheduler
           ansible.builtin.shell: |
             set -o pipefail
-            export KUBECONFIG=/var/lib/kubernetes/controller-manager.kubeconfig
-            cat <<EOF | kubectl apply -f -
+            export KUBECONFIG=/var/lib/kubernetes/scheduler.kubeconfig
+            cat <<EOF | kubectl apply --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig -f -
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
             metadata:
