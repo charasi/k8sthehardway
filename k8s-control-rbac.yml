@@ -125,6 +125,11 @@
               - apiGroups: ["rbac.authorization.k8s.io"]
                 resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
                 verbs: ["get", "list", "create", "update", "delete"]
+
+              # Access to serviceaccounts for token creation
+              - apiGroups: [""]
+                resources: ["serviceaccounts", "serviceaccounts/token"]
+                verbs: ["get", "list", "create", "update", "delete"]
             EOF
           register: rbac_status
           changed_when: false
