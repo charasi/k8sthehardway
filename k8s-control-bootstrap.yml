@@ -187,7 +187,7 @@
 
         - name: Set credentials for controller-manager in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-credentials controller-manager \
+            kubectl config set-credentials system:kube-controller-manager \
               --client-certificate=/var/lib/kubernetes/controller-manager.pem \
               --client-key=/var/lib/kubernetes/controller-manager-key.pem \
               --embed-certs=true \
@@ -230,7 +230,7 @@
 
         - name: Set credentials for scheduler in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-credentials scheduler \
+            kubectl config set-credentials system:kube-scheduler \
               --client-certificate=/var/lib/kubernetes/scheduler.pem \
               --client-key=/var/lib/kubernetes/scheduler-key.pem \
               --embed-certs=true \
