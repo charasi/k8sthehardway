@@ -76,62 +76,49 @@
             metadata:
               name: system:kube-controller-manager
             rules:
-              # Existing rules for other resources
-              - apiGroups: ["storage.k8s.io"]
-                resources: ["volumeattachments"]
-                verbs: ["get", "list", "watch"]
-            
+              - apiGroups: [""]
+                resources: ["*"]
+                verbs: ["*"]  # Grant all verbs (create, delete, get, list, etc.)
+          
               - apiGroups: ["apps"]
-                resources: ["deployments", "statefulsets", "replicasets", "controllerrevisions"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: ["networking.k8s.io"]
-                resources: ["networkpolicies", "servicecidrs"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: ["coordination.k8s.io"]
-                resources: ["leases", "leasecandidates"]
-                verbs: ["get", "list", "watch", "update"]
-            
-              - apiGroups: ["discovery.k8s.io"]
-                resources: ["endpointslices"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: [""]
-                resources: ["serviceaccounts"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: [""]
-                resources: ["serviceaccounts/token"]
-                verbs: ["create", "get", "list", "watch"]
-            
-              - apiGroups: [""]
-                resources: ["secrets"]
-                verbs: ["get", "list", "create", "watch"]
-            
-              - apiGroups: ["v1"]
-                resources: ["configmaps", "cronjobs", "services", "nodes", "serviceaccounts"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: ["autoscaling"]
-                resources: ["horizontalpodautoscalers"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: ["scheduling.k8s.io"]
-                resources: ["priorityclasses"]
-                verbs: ["get", "list", "watch"]
-            
-              - apiGroups: ["resource.k8s.io"]
-                resources: ["resourceclaims"]
-                verbs: ["get", "list", "watch"]
-            
+                resources: ["*"]
+                verbs: ["*"]
+          
               - apiGroups: ["batch"]
-                resources: ["jobs"]
-                verbs: ["get", "list", "watch"]
-            
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["autoscaling"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["networking.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["coordination.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["storage.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["discovery.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["scheduling.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["resource.k8s.io"]
+                resources: ["*"]
+                verbs: ["*"]
+          
               - apiGroups: ["internal.apiserver.k8s.io"]
-                resources: ["storageversions"]
-                verbs: ["get", "list", "watch"]
+                resources: ["*"]
+                verbs: ["*"]
              EOF
           register: rbac_status
           changed_when: false
