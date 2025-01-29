@@ -156,7 +156,7 @@
 
         - name: Set context for admin in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context admin-context \
+            kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
               --user=admin \
               --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
@@ -167,7 +167,7 @@
 
         - name: Use context for admin kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context admin-context --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -199,7 +199,7 @@
 
         - name: Set context for controller-manager in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context controller-manager-context \
+            kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
               --user=system:kube-controller-manager \
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
@@ -210,7 +210,7 @@
 
         - name: Use context for controller-manager kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context controller-manager-context --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -242,7 +242,7 @@
 
         - name: Set context for scheduler in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context scheduler-context \
+            kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
               --user=system:kube-scheduler \
               --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
@@ -253,7 +253,7 @@
 
         - name: Use context for scheduler kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context scheduler-context --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
+            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -309,7 +309,7 @@
           register: status
           changed_when: false
 
-        - name: Verify cmd process sucessfully
+        - name: Verify cmd process successfully
           ansible.builtin.debug:
             var: status
             verbosity: 0
