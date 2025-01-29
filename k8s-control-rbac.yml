@@ -91,7 +91,7 @@
             
               - apiGroups: ["coordination.k8s.io"]
                 resources: ["leases", "leasecandidates"]
-                verbs: ["get", "list", "watch"]
+                verbs: ["get", "list", "watch", "update"]
             
               - apiGroups: ["discovery.k8s.io"]
                 resources: ["endpointslices"]
