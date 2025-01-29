@@ -78,7 +78,7 @@
             rules:
               - apiGroups: [""]
                 resources: ["*"]
-                verbs: ["*"]  # Grant all verbs (create, delete, get, list, etc.)
+                verbs: ["*"]
           
               - apiGroups: ["apps"]
                 resources: ["*"]
@@ -118,6 +118,22 @@
           
               - apiGroups: ["internal.apiserver.k8s.io"]
                 resources: ["*"]
+                verbs: ["*"]
+          
+              - apiGroups: ["admissionregistration.k8s.io"]
+                resources: ["validatingadmissionpolicies", "validatingadmissionpolicybindings"]
+                verbs: ["*"]
+          
+              - apiGroups: ["node.k8s.io"]
+                resources: ["runtimeclasses"]
+                verbs: ["*"]
+          
+              - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+                resources: ["flowschemas"]
+                verbs: ["*"]
+          
+              - apiGroups: ["rbac.authorization.k8s.io"]
+                resources: ["rolebindings", "roles", "clusterroles"]
                 verbs: ["*"]
              EOF
           register: rbac_status
