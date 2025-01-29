@@ -76,107 +76,52 @@
             metadata:
               name: system:kube-controller-manager
             rules:
-              # Access to core resources
-              - apiGroups: [""]
-                resources: ["pods", "services", "endpoints", "namespaces", "replicationcontrollers", "nodes", "persistentvolumes", "persistentvolumeclaims", "configmaps", "secrets", "serviceaccounts", "events", "limitranges", "resourcequotas"]
-                verbs: ["get", "list", "create", "update", "patch", "delete"]
-
-              # Access to coordination.k8s.io for leader election
-              - apiGroups: ["coordination.k8s.io"]
-                resources: ["leases"]
-                verbs: ["get", "create", "update", "delete"]
-
-              # Access to extensions/v1beta1 for deployments, replicasets, etc.
-              - apiGroups: ["extensions"]
-                resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to apps/v1 for deployments, replicasets, etc.
-              - apiGroups: ["apps"]
-                resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to batch for jobs, cronjobs
-              - apiGroups: ["batch"]
-                resources: ["jobs", "cronjobs"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to autoscaling for horizontalpodautoscalers
-              - apiGroups: ["autoscaling"]
-                resources: ["horizontalpodautoscalers"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to networking.k8s.io for network policies
-              - apiGroups: ["networking.k8s.io"]
-                resources: ["networkpolicies"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to admissionregistration.k8s.io for mutating webhooks
-              - apiGroups: ["admissionregistration.k8s.io"]
-                resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to policy for podsecuritypolicies
-              - apiGroups: ["policy"]
-                resources: ["podsecuritypolicies"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to rbac.authorization.k8s.io for role-based access control
-              - apiGroups: ["rbac.authorization.k8s.io"]
-                resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Access to serviceaccounts for token creation
-              - apiGroups: [""]
-                resources: ["serviceaccounts", "serviceaccounts/token"]
-                verbs: ["get", "list", "create", "update", "delete"]
-
-              # Existing rules for resources like pods, services, etc.
-              # Add new rules as needed for missing resources
+              # Existing rules for other resources
               - apiGroups: ["storage.k8s.io"]
                 resources: ["volumeattachments"]
                 verbs: ["get", "list", "watch"]
-
+            
               - apiGroups: ["apps"]
-                resources: ["daemonsets"]
+                resources: ["deployments", "statefulsets", "replicasets", "controllerrevisions"]
                 verbs: ["get", "list", "watch"]
-
-              - apiGroups: ["rbac.authorization.k8s.io"]
-                resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
-                verbs: ["get", "list", "watch"]
-
-              - apiGroups: ["node.k8s.io"]
-                resources: ["runtimeclasses"]
-                verbs: ["get", "list", "watch"]
-
-              - apiGroups: ["networking.k8s.io"]
-                resources: ["ingressclasses"]
-                verbs: ["get", "list", "watch"]
-
-              - apiGroups: ["storage.k8s.io"]
-                resources: ["volumeattachments"]
-                verbs: ["get", "list", "watch"]
-
-              - apiGroups: ["apps"]
-                resources: ["deployments"]
-                verbs: ["get", "list", "watch"]
-
+            
               - apiGroups: ["networking.k8s.io"]
                 resources: ["networkpolicies", "servicecidrs"]
                 verbs: ["get", "list", "watch"]
-
+            
               - apiGroups: ["coordination.k8s.io"]
                 resources: ["leases", "leasecandidates"]
                 verbs: ["get", "list", "watch"]
-
+            
               - apiGroups: ["discovery.k8s.io"]
                 resources: ["endpointslices"]
                 verbs: ["get", "list", "watch"]
-
+            
               - apiGroups: ["v1"]
-                resources: ["configmaps", "cronjobs"]
+                resources: ["configmaps", "cronjobs", "services", "nodes", "serviceaccounts"]
                 verbs: ["get", "list", "watch"]
-            EOF
+            
+              - apiGroups: ["autoscaling"]
+                resources: ["horizontalpodautoscalers"]
+                verbs: ["get", "list", "watch"]
+            
+              - apiGroups: ["scheduling.k8s.io"]
+                resources: ["priorityclasses"]
+                verbs: ["get", "list", "watch"]
+            
+              - apiGroups: ["resource.k8s.io"]
+                resources: ["resourceclaims"]
+                verbs: ["get", "list", "watch"]
+            
+              - apiGroups: ["batch"]
+                resources: ["jobs"]
+                verbs: ["get", "list", "watch"]
+            
+              - apiGroups: ["internal.apiserver.k8s.io"]
+                resources: ["storageversions"]
+                verbs: ["get", "list", "watch"]         
+                  # Continue adding any other required resources             
+             EOF
           register: rbac_status
           changed_when: false
           args:
