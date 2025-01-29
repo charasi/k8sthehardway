@@ -152,6 +152,30 @@
               - apiGroups: ["networking.k8s.io"]
                 resources: ["ingressclasses"]
                 verbs: ["get", "list", "watch"]
+            
+              - apiGroups: ["storage.k8s.io"]
+                resources: ["volumeattachments"]
+                verbs: ["get", "list", "watch"]
+                
+                - apiGroups: ["apps"]
+                  resources: ["deployments"]
+                  verbs: ["get", "list", "watch"]
+                
+                - apiGroups: ["networking.k8s.io"]
+                  resources: ["networkpolicies", "servicecidrs"]
+                  verbs: ["get", "list", "watch"]
+                
+                - apiGroups: ["coordination.k8s.io"]
+                  resources: ["leases", "leasecandidates"]
+                  verbs: ["get", "list", "watch"]
+                
+                - apiGroups: ["discovery.k8s.io"]
+                  resources: ["endpointslices"]
+                  verbs: ["get", "list", "watch"]
+                
+                - apiGroups: ["v1"]
+                  resources: ["configmaps", "cronjobs"]
+                  verbs: ["get", "list", "watch"]
             EOF
           register: rbac_status
           changed_when: false
