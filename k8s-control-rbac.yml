@@ -97,6 +97,10 @@
                 resources: ["endpointslices"]
                 verbs: ["get", "list", "watch"]
             
+              - apiGroups: [""]
+                resources: ["serviceaccounts"]
+                verbs: ["get", "list", "watch"]
+                        
               - apiGroups: ["v1"]
                 resources: ["configmaps", "cronjobs", "services", "nodes", "serviceaccounts"]
                 verbs: ["get", "list", "watch"]
