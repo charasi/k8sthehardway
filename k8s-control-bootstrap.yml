@@ -87,8 +87,6 @@
             - { source: "gs://kthw-misc/scheduler.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/scheduler-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/static_ip.txt", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/reverse.pem", dest: "/var/lib/kubernetes/" }
-            - { source: "gs://kthw-misc/reverse-key.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
             - { source: "gs://kthw-misc/service-account.pem", dest: "/var/lib/kubernetes/" }
             - { source: "gs://kthw-misc/service-account-key.pem", dest: "/var/lib/kubernetes/" }
@@ -429,7 +427,7 @@
           register: chmod_status
           changed_when: true
 
-        - name: Set correct permissions for kubeconfig reverse
+        - name: Set correct permissions for kubeconfig admin
           ansible.builtin.command:
             cmd: sudo chmod 644 /var/lib/kubernetes/admin.kubeconfig
           register: chmod_status
