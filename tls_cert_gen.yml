@@ -29,7 +29,6 @@
             - { source: "gs://kthw-misc/scheduler-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/etcd-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/etcd-client-csr.json", dest: "/home/wisccourant/certificates/" }
-            - { source: "gs://kthw-misc/reverse-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/service-account-csr.json", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
@@ -267,40 +266,6 @@
             msg: "The file exists"
           when: file_stat.stat.exists
 
-        - name: Generate the reverse certificate and private key
-          ansible.builtin.shell: |
-            set -o pipefail
-            sudo cfssl gencert \
-              -ca=ca.pem \
-              -ca-key=ca-key.pem \
-              -config=ca-config.json \
-              -profile=kubernetes \
-              reverse-csr.json | cfssljson -bare reverse
-          args:
-            executable: /bin/bash
-            chdir: /home/wisccourant/certificates/
-          changed_when: false
-
-        - name: Check if the file exists
-          ansible.builtin.stat:
-            path: "/home/wisccourant/certificates/reverse-key.pem"
-          register: file_stat
-
-        - name: Display file existence result
-          ansible.builtin.debug:
-            msg: "The file exists"
-          when: file_stat.stat.exists
-
-        - name: Check if the file exists
-          ansible.builtin.stat:
-            path: "/home/wisccourant/certificates/reverse.pem"
-          register: file_stat
-
-        - name: Display file existence result
-          ansible.builtin.debug:
-            msg: "The file exists"
-          when: file_stat.stat.exists
-
         - name: Generate a certificate and private key for each Kubernetes worker node
           ansible.builtin.shell: |
             set -o pipefail
@@ -466,8 +431,6 @@
             - { source: "/home/wisccourant/certificates/scheduler-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/controller-manager.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/controller-manager-key.pem", dest: "gs://kthw-misc/" }
-            - { source: "/home/wisccourant/certificates/reverse.pem", dest: "gs://kthw-misc/" }
-            - { source: "/home/wisccourant/certificates/reverse-key.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 

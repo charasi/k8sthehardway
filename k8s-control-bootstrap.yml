@@ -156,7 +156,7 @@
 
         - name: Set context for admin in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context default \
+            kubectl config set-context admin-context \
               --cluster=kubernetes-the-hard-way \
               --user=admin \
               --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
@@ -165,9 +165,9 @@
           register: status
           changed_when: false
 
-        - name: Use context for controller-manager kubeconfig
+        - name: Use context for admin kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
+            kubectl config use-context admin-context --kubeconfig=/var/lib/kubernetes/admin.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -199,9 +199,9 @@
 
         - name: Set context for controller-manager in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-context default \
+            kubectl config set-context controller-manager-context \
               --cluster=kubernetes-the-hard-way \
-              --user=controller-manager \
+              --user=system:kube-controller-manager \
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
@@ -210,50 +210,7 @@
 
         - name: Use context for controller-manager kubeconfig
           ansible.builtin.shell: |
-            kubectl config use-context default --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Generate kubeconfig file for reverse
-          ansible.builtin.shell: |
-            kubectl config set-cluster kubernetes-the-hard-way \
-              --certificate-authority=/var/lib/kubernetes/ca.pem \
-              --embed-certs=true \
-              --server=https://127.0.0.1:6443 \
-              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Set credentials for reverse in kubeconfig
-          ansible.builtin.shell: |
-            kubectl config set-credentials reverse \
-              --client-certificate=/var/lib/kubernetes/reverse.pem \
-              --client-key=/var/lib/kubernetes/reverse-key.pem \
-              --embed-certs=true \
-              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Set context for reverse in kubeconfig
-          ansible.builtin.shell: |
-            kubectl config set-context reverse-context \
-              --cluster=kubernetes-the-hard-way \
-              --user=reverse \
-              --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Use context for reverse kubeconfig
-          ansible.builtin.shell: |
-            kubectl config use-context reverse-context --kubeconfig=/var/lib/kubernetes/reverse.kubeconfig
+            kubectl config use-context controller-manager-context --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
           register: status
@@ -287,7 +244,7 @@
           ansible.builtin.shell: |
             kubectl config set-context scheduler-context \
               --cluster=kubernetes-the-hard-way \
-              --user=scheduler \
+              --user=system:kube-scheduler \
               --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
@@ -474,7 +431,7 @@
 
         - name: Set correct permissions for kubeconfig reverse
           ansible.builtin.command:
-            cmd: sudo chmod 644 /var/lib/kubernetes/reverse.kubeconfig
+            cmd: sudo chmod 644 /var/lib/kubernetes/admin.kubeconfig
           register: chmod_status
           changed_when: true
 
