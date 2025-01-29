@@ -100,7 +100,15 @@
               - apiGroups: [""]
                 resources: ["serviceaccounts"]
                 verbs: ["get", "list", "watch"]
-                        
+            
+              - apiGroups: [""]
+                resources: ["serviceaccounts/token"]
+                verbs: ["create", "get", "list", "watch"]
+            
+              - apiGroups: [""]
+                resources: ["secrets"]
+                verbs: ["get", "list", "create", "watch"]
+            
               - apiGroups: ["v1"]
                 resources: ["configmaps", "cronjobs", "services", "nodes", "serviceaccounts"]
                 verbs: ["get", "list", "watch"]
@@ -123,8 +131,7 @@
             
               - apiGroups: ["internal.apiserver.k8s.io"]
                 resources: ["storageversions"]
-                verbs: ["get", "list", "watch"]         
-                  # Continue adding any other required resources             
+                verbs: ["get", "list", "watch"]
              EOF
           register: rbac_status
           changed_when: false
