@@ -65,3 +65,45 @@
           changed_when: false
           args:
             executable: /bin/bash
+
+        - name: Create custom ClusterRole for controller-manager
+          ansible.builtin.shell: |
+            set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/admin.kubeconfig
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              name: system:kube-controller-manager
+            rules:
+              - apiGroups: ["coordination.k8s.io"]
+                resources: ["leases"]
+                verbs: ["create", "get", "update", "delete"]
+            EOF
+          register: rbac_status
+          changed_when: false
+          args:
+            executable: /bin/bash
+
+        - name: Bind custom ClusterRole to controller-manager
+          ansible.builtin.shell: |
+            set -o pipefail
+            export KUBECONFIG=/var/lib/kubernetes/admin.kubeconfig
+            cat <<EOF | kubectl apply -f -
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: system:controller-manager-leases
+            subjects:
+              - kind: User
+                name: system:controller-manager
+                apiGroup: rbac.authorization.k8s.io
+            roleRef:
+              kind: ClusterRole
+              name: system:kube-controller-manager
+              apiGroup: rbac.authorization.k8s.io
+            EOF
+          register: rbac_binding_status
+          changed_when: false
+          args:
+            executable: /bin/bash
