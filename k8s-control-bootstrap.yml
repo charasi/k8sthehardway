@@ -333,7 +333,7 @@
               --root-ca-file=/var/lib/kubernetes/ca.pem \\
               --service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \\
               --service-cluster-ip-range=10.32.0.0/24 \\
-              --use-service-account-credentials=true \\
+              --use-service-account-credentials=false \\
               --v=2
             Restart=on-failure
             RestartSec=5
