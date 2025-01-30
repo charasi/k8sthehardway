@@ -38,7 +38,7 @@
 
         - name: Download containerd
           ansible.builtin.get_url:
-            url: "https://github.com/containerd/containerd/releases/download/v1.7.0/containerd-1.7.0-linux-amd64.tar.gz"
+            url: "https://github.com/containerd/containerd/releases/download/v2.0.2/containerd-2.0.2-linux-amd64.tar.gz"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
@@ -183,7 +183,7 @@
                     snapshotter = "overlayfs"
 
                   [plugins.cri.containerd.runtimes.runc]
-                    runtime_type = "io.containerd.runtime.v1.linux"
+                    runtime_type = "io.containerd.runtime.v2.linux"
                     runtime_engine = "/usr/local/bin/runc"
                     runtime_root = ""
                     [plugins.cri.containerd.runtimes.runc.options]
