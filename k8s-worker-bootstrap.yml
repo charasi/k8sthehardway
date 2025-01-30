@@ -178,13 +178,26 @@
             dest: /etc/containerd/config.toml
             content: |
               [plugins]
-                [plugins.cri.containerd]
-                  snapshotter = "overlayfs"
-                  [plugins.cri.containerd.default_runtime]
+                [plugins.cri]
+                  [plugins.cri.containerd]
+                    snapshotter = "overlayfs"
+
+                  [plugins.cri.containerd.runtimes.runc]
                     runtime_type = "io.containerd.runtime.v1.linux"
                     runtime_engine = "/usr/local/bin/runc"
                     runtime_root = ""
+                    [plugins.cri.containerd.runtimes.runc.options]
+                      SystemdCgroup = true  # This is crucial if using systemd for cgroup management
             mode: '0644'
+
+        - name: Check if /etc/containerd/config.toml exists
+          ansible.builtin.stat:
+            path: /etc/containerd/config.toml
+          register: containerd_config
+
+        - name: Debug containerd config file existence
+          ansible.builtin.debug:
+            msg: "File exists: {{ containerd_config.stat.exists }}"
 
         - name: Get POD_CIDR from gcp
           ansible.builtin.shell: |
