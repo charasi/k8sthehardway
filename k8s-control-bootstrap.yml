@@ -171,35 +171,6 @@
           register: status
           changed_when: false
 
-        - name: Create a service account in the kube-system namespace for controller-manager
-          ansible.builtin.shell: |
-            kubectl create serviceaccount kube-controller-manager -n kube-system
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Bind the ServiceAccount to system:kube-controller-manager role
-          ansible.builtin.shell: |
-            kubectl create clusterrolebinding kube-controller-manager \
-              --clusterrole=system:kube-controller-manager \
-              --serviceaccount=kube-system:kube-controller-manager
-          args:
-            chdir: /var/lib/kubernetes/
-          register: status
-          changed_when: false
-
-        - name: Get the token for the kube-controller-manager ServiceAccount
-          ansible.builtin.shell: |
-            set -o pipefail
-            kubectl get secret -n kube-system \
-              $(kubectl get serviceaccount kube-controller-manager -n kube-system -o jsonpath='{.secrets[0].name}') \
-              -o jsonpath='{.data.token}' | base64 --decode
-          args:
-            chdir: /var/lib/kubernetes/
-          register: service_act_token
-          changed_when: false
-
         - name: Generate kubeconfig file for controller-manager
           ansible.builtin.shell: |
             kubectl config set-cluster kubernetes-the-hard-way \
@@ -215,7 +186,9 @@
         - name: Set credentials for controller-manager in kubeconfig
           ansible.builtin.shell: |
             kubectl config set-credentials system:kube-controller-manager \
-              --token={{ service_act_token.stdout | trim }} \
+              --client-certificate=/var/lib/kubernetes/controller-manager.pem \
+              --client-key=/var/lib/kubernetes/controller-manager-key.pem \
+              --embed-certs=true \
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
