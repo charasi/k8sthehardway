@@ -1,6 +1,6 @@
 ---
 - name: Bootstrapping the Kubernetes Control Plane
-  hosts: k8controllers
+  hosts: k8controller1
   remote_user: wisccourant
   become: true
 
