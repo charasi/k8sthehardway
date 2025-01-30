@@ -9,7 +9,7 @@
       block:
         - name: Download the Kubernetes kube-apiserver
           ansible.builtin.get_url:
-            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-apiserver"
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.32.1/bin/linux/amd64/kube-apiserver"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
@@ -21,7 +21,7 @@
 
         - name: Download the Kubernetes controller-manager
           ansible.builtin.get_url:
-            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-controller-manager"
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.32.1/bin/linux/amd64/kube-controller-manager"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
@@ -33,7 +33,7 @@
 
         - name: Download the Kubernetes kube-scheduler
           ansible.builtin.get_url:
-            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kube-scheduler"
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.32.1/bin/linux/amd64/kube-scheduler"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
@@ -45,7 +45,7 @@
 
         - name: Download the Kubernetes kubectl
           ansible.builtin.get_url:
-            url: "https://storage.googleapis.com/kubernetes-release/release/v1.31.0/bin/linux/amd64/kubectl"
+            url: "https://storage.googleapis.com/kubernetes-release/release/v1.32.1/bin/linux/amd64/kubectl"
             dest: /home/wisccourant/
             mode: '0755'
           register: output
