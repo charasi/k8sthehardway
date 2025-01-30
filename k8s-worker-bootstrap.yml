@@ -116,7 +116,7 @@
 
         - name: Extract containerd to /usr/local
           ansible.builtin.unarchive:
-            src: "/home/wisccourant/containerd-1.7.0-linux-amd64.tar.gz"
+            src: "/home/wisccourant/containerd-2.0.2-linux-amd64.tar.gz"
             dest: "/usr/local/"
             remote_src: true
 
