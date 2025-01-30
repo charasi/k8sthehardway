@@ -1,6 +1,6 @@
 ---
 - name: Add RBAC for scheduler, controller-manager, and reverse
-  hosts: k8controllers
+  hosts: k8controller1
   remote_user: wisccourant
   become: true
 
