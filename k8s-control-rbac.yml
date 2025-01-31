@@ -149,7 +149,7 @@
               name: system:kube-controller-manager
             subjects:
               - kind: User
-                name: system:kube-controller-manager
+                name: system:controller-manager
                 apiGroup: rbac.authorization.k8s.io
             EOF
           register: rbac_binding_status
