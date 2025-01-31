@@ -161,7 +161,6 @@
           ansible.builtin.shell: |
             export KUBECONFIG=/var/lib/kubernetes/admin.kubeconfig
             sudo systemctl restart kube-controller-manager
-          register: rbac_binding_status
           changed_when: false
           args:
             executable: /bin/bash
