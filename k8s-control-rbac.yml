@@ -142,14 +142,14 @@
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
             metadata:
-              name: system:kube-controller-manager-binding
+              name: system:controller-manager-binding
             roleRef:
               apiGroup: rbac.authorization.k8s.io
               kind: ClusterRole
               name: controller-manager-role
             subjects:
               - kind: User
-                name: system:kube-controller-manager
+                name: system:controller-manager
                 apiGroup: rbac.authorization.k8s.io
             EOF
           register: rbac_binding_status
