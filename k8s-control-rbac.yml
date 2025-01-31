@@ -78,7 +78,7 @@
                 rbac.authorization.kubernetes.io/autoupdate: "true"
               labels:
                 kubernetes.io/bootstrapping: rbac-defaults
-              name: controller-manager-role
+              name: system:kube-controller-manager
             rules:
               - apiGroups: [""]
                 resources: ["secrets"]
@@ -142,14 +142,14 @@
             apiVersion: rbac.authorization.k8s.io/v1
             kind: ClusterRoleBinding
             metadata:
-              name: system:controller-manager-binding
+              name: system:kube-controller-manager
             roleRef:
               apiGroup: rbac.authorization.k8s.io
               kind: ClusterRole
-              name: controller-manager-role
+              name: system:kube-controller-manager
             subjects:
               - kind: User
-                name: system:controller-manager
+                name: system:kube-controller-manager
                 apiGroup: rbac.authorization.k8s.io
             EOF
           register: rbac_binding_status
