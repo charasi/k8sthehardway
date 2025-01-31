@@ -83,56 +83,56 @@
               - apiGroups: [""]
                 resources: ["secrets"]
                 verbs: ["create", "delete", "get", "update"]
-            
+
               - apiGroups: [""]
                 resources: ["serviceaccounts"]
                 verbs: ["create", "get", "update"]
-            
+
               - apiGroups: [""]
                 resources: ["events"]
                 verbs: ["create", "patch", "update"]
-            
+
               - apiGroups: ["events.k8s.io"]
                 resources: ["events"]
                 verbs: ["create", "patch", "update"]
-            
+
               - apiGroups: [""]
                 resources: ["serviceaccounts/token"]
                 verbs: ["create"]
-            
+
               - apiGroups: ["authentication.k8s.io"]
                 resources: ["tokenreviews"]
                 verbs: ["create"]
-            
+
               - apiGroups: ["authorization.k8s.io"]
                 resources: ["subjectaccessreviews"]
                 verbs: ["create"]
-            
+
               - apiGroups: ["coordination.k8s.io"]
                 resources: ["leases"]
                 verbs: ["create"]
-            
+
               - apiGroups: ["coordination.k8s.io"]
                 resources: ["leases"]
                 resourceNames: ["kube-controller-manager"]
                 verbs: ["get", "update"]
-            
+
               - apiGroups: [""]
                 resources: ["configmaps"]
                 verbs: ["get"]
-            
+
               - apiGroups: [""]
                 resources: ["namespaces"]
                 verbs: ["get"]
-            
+
               - apiGroups: ["*"]
                 resources: ["*"]
                 verbs: ["list", "watch"]
             EOF
-            register: rbac_status
-            changed_when: false
-            args:
-              executable: /bin/bash
+          register: rbac_status
+          changed_when: false
+          args:
+            executable: /bin/bash
 
         - name: Bind custom ClusterRole to controller
           ansible.builtin.shell: |
@@ -156,4 +156,3 @@
           changed_when: false
           args:
             executable: /bin/bash
-
