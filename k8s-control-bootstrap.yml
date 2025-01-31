@@ -185,7 +185,7 @@
 
         - name: Set credentials for controller-manager in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-credentials kube-controller-manager \
+            kubectl config set-credentials system:kube-controller-manager \
               --client-certificate=/var/lib/kubernetes/controller-manager.pem \
               --client-key=/var/lib/kubernetes/controller-manager-key.pem \
               --embed-certs=true \
@@ -199,7 +199,7 @@
           ansible.builtin.shell: |
             kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
-              --user=kube-controller-manager \
+              --user=system:kube-controller-manager \
               --kubeconfig=/var/lib/kubernetes/controller-manager.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
@@ -228,7 +228,7 @@
 
         - name: Set credentials for scheduler in kubeconfig
           ansible.builtin.shell: |
-            kubectl config set-credentials kube-scheduler \
+            kubectl config set-credentials system:kube-scheduler \
               --client-certificate=/var/lib/kubernetes/scheduler.pem \
               --client-key=/var/lib/kubernetes/scheduler-key.pem \
               --embed-certs=true \
@@ -242,7 +242,7 @@
           ansible.builtin.shell: |
             kubectl config set-context default \
               --cluster=kubernetes-the-hard-way \
-              --user=kube-scheduler  \
+              --user=system:kube-scheduler  \
               --kubeconfig=/var/lib/kubernetes/scheduler.kubeconfig
           args:
             chdir: /var/lib/kubernetes/
