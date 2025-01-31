@@ -156,3 +156,4 @@
           changed_when: false
           args:
             executable: /bin/bash
+
