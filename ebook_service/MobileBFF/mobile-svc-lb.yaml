@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mobile-svc-lb
+  namespace: bookstore-ns
+spec:
+  type: LoadBalancer
+  selector:
+    app: mobile
+  ports:
+    - port: 80
+      targetPort: 8080

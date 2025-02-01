@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobile-deploy
+  namespace: bookstore-ns
+spec:
+  selector:
+    matchLabels:
+      app: mobile
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: mobile
+    spec:
+      #priorityClassName: high-priority
+      containers:
+        - name: mobile
+          image: charasi/mobile:latest
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            #timeoutSeconds: 5
+            #failureThreshold: 3
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - mobile

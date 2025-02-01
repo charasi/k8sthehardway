@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-deploy
+  namespace: bookstore-ns
+spec:
+  selector:
+    matchLabels:
+      app: customerservice
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: customerservice
+    spec:
+      #priorityClassName: high-priority
+      containers:
+        - name: customerservice
+          image: charasi/customerservice:latest
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            #timeoutSeconds: 5
+            #failureThreshold: 3
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - customerservice

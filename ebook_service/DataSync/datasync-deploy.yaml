@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: datasync
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: datasync
+              image: charasi/datasync:latest
+              imagePullPolicy: IfNotPresent
+          restartPolicy: OnFailure

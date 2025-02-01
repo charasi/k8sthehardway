@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: datasync-svc-lb
+  namespace: bookstore-ns
+spec:
+  type: LoadBalancer
+  selector:
+    app: datasync
+  ports:
+    - port: 3000
+      targetPort: 3000

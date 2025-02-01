@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookquery-deploy
+  namespace: bookstore-ns
+spec:
+  selector:
+    matchLabels:
+      app: bookquery
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bookquery
+    spec:
+      #priorityClassName: high-priority
+      containers:
+        - name: bookquery
+          image: charasi/bookquery:latest
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            #timeoutSeconds: 5
+            #failureThreshold: 3
+        - name: circuit
+          image: charasi/circuit:latest
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - bookquery
