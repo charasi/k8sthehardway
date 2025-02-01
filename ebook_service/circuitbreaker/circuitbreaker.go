@@ -85,7 +85,6 @@ send request to book service
 func getRelatedBookRequest(r *http.Request) *http.Response {
 	// send request, get response
 	var response *http.Response
-	//baseUrl := "http://52.72.198.36/recommended-titles/isbn/"
 	baseUrl := "http://52.72.198.36:80/recommended-titles/isbn/"
 	path := r.URL.Path
 	paths := strings.Split(path, "/")

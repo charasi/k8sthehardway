@@ -1,5 +1,5 @@
 /**
-CRM Kafka consumer service that connects to the Kafka topic casiama.customer.evt
+CRM kafka consumer service that connects to the kafka topic casiama.customer.evt
 Upon receiving the message, the CRM service shall parse the content and
 send an email to the newly registered customer.
 Charles Asiama
@@ -39,7 +39,7 @@ const (
 )
 
 /*
-Kafka consumer service
+kafka consumer service
 loop forever continously wating to for new messages from subscribed topic
 */
 func main() {

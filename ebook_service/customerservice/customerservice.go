@@ -237,7 +237,7 @@ func verifyRetrieveScenarios(scenario string, key string) int {
 
 /*
 *
-Kafka producer that sends messages to subscribed topics
+kafka producer that sends messages to subscribed topics
 */
 func KafkaProducer(jsonResponseBody []byte) {
 	// topic

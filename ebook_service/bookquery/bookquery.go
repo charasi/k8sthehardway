@@ -262,7 +262,6 @@ func status(w http.ResponseWriter, r *http.Request) {
 Main function to handle routes/path for web server
 */
 func main() {
-	//mux := http.NewServeMux()
 	mux := mux.NewRouter()
 	mux.HandleFunc("/books/isbn/{ISBN}", RetrieveBookEndpoint).Methods("GET")
 	mux.HandleFunc("/books/{ISBN}", RetrieveBookEndpoint).Methods("GET")
