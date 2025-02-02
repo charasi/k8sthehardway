@@ -26,12 +26,12 @@ module "buckets" {
 
 module "target_nodes" {
   source       = "../ic/target_nodes"
-  controller_0 = module.instances.controller_0_id
-  controller_1 = module.instances.controller_1_id
-  controller_2 = module.instances.controller_2_id
-  worker_0 = module.instances.worker_0_id
-  worker_1 = module.instances.worker_1_id
-  worker_2 = module.instances.worker_2_id
+  controller_0 = module.instances.controller_0_self_link
+  controller_1 = module.instances.controller_1_self_link
+  controller_2 = module.instances.controller_2_self_link
+  worker_0 = module.instances.worker_0_self_link
+  worker_1 = module.instances.worker_1_self_link
+  worker_2 = module.instances.worker_2__self_link
   ip_address   = module.vpc.static_ip_address
 }
 
