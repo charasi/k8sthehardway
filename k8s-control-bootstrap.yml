@@ -415,7 +415,16 @@
           ansible.builtin.command:
             cmd: sudo systemctl enable nginx
             chdir: /home/wisccourant/
-          changed_when: false
+
+        - name: Reload the nginx Services
+          ansible.builtin.command:
+            cmd: sudo systemctl reload nginx
+            chdir: /home/wisccourant/
+
+        - name: Restart the nginx Services
+          ansible.builtin.command:
+            cmd: sudo systemctl restart nginx
+            chdir: /home/wisccourant/
 
         - name: Pause for 10 seconds
           ansible.builtin.pause:
