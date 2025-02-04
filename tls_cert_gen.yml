@@ -425,7 +425,7 @@
             - { source: "/home/wisccourant/certificates/service-account-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/service-account.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/load-balancer-key.pem", dest: "gs://kthw-misc/" }
-            - { source: "/home/wisccourant/certificates/load-balancer.pem.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/load-balancer.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 
