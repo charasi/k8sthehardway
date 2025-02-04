@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11b8ea237201cd102f140750de933880f3'
+    password = '112dabd20d7cbdec13cae29a753fe0c8c0'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -142,10 +142,12 @@ def main():
         print(f"Build {job.build_id} did not pass.")
         exit(1)
 
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin-key.pem", "/home/charasi/cmu/kubelet")
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin.pem", "/home/charasi/cmu/kubelet")
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/kubelet")
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin-key.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
 
     # Read the config.xml file
     with open("./etcd.xml", 'r') as file:

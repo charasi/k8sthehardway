@@ -24,6 +24,7 @@ module "buckets" {
   source = "../ic/bucket"
 }
 
+/**
 module "target_nodes" {
   source       = "../ic/target_nodes"
   controller_0 = module.instances.controller_0_self_link
@@ -35,6 +36,8 @@ module "target_nodes" {
   ip_address   = module.vpc.static_ip_address
 }
 
+ */
+
 output "instance_outputs" {
   value     = module.instances
   sensitive = true
@@ -43,4 +46,36 @@ output "instance_outputs" {
 output "bucket_outputs" {
   value     = module.buckets
   sensitive = true
+}
+
+output "vpc_network_id" {
+  value     = module.vpc.network_id
+}
+
+output "controller_0_id" {
+  value = module.instances.controller_0_id
+}
+
+output "controller_1_id" {
+  value = module.instances.controller_1_id
+}
+
+output "controller_2_id" {
+  value = module.instances.controller_2_id
+}
+
+output "worker_0_id" {
+  value = module.instances.worker_0_id
+}
+
+output "worker_1_id" {
+  value = module.instances.worker_1_id
+}
+
+output "worker_2_id" {
+  value = module.instances.worker_2_id
+}
+
+output "static_ip_address" {
+  value = module.vpc.static_ip_address
 }

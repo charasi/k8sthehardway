@@ -30,6 +30,8 @@
             - { source: "gs://kthw-misc/etcd-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/etcd-client-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/service-account-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/service-account-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/load-balancer-csr.json", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
 
@@ -379,6 +381,35 @@
             msg: "The file exists"
           when: file_stat.stat.exists
 
+        - name: Generate the load balancer certificate and private key
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert \
+                -ca=ca.pem \
+                -ca-key=ca-key.pem \
+                -config=ca-config.json \
+                -profile=kubernetes \
+                load-balancer-csr.json | cfssljson -bare load-balancer
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/load-balancer-key.pem"
+          register: file_stat
+
+        - name: Display file existence result
+          ansible.builtin.debug:
+            msg: "The file exists"
+          when: file_stat.stat.exists
+
+        - name: Check if the file exists
+          ansible.builtin.stat:
+            path: "/home/wisccourant/certificates/load-balancer.pem"
+          register: file_stat
+
         - name: Upload worker certificates to gcp
           ansible.builtin.shell: |
             sudo gsutil cp {{ item.source }} {{ item.dest }}
@@ -393,6 +424,8 @@
             - { source: "/home/wisccourant/certificates/kube-proxy.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/service-account-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/service-account.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/load-balancer-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/load-balancer.pem.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 

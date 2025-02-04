@@ -147,3 +147,11 @@ resource "google_storage_bucket_object" "worker_2" {
   source = "../certificates/worker-2.yml"
   content_type  = "application/x-yaml"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "load_balancer" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "load-balancer-csr.json"
+  source = "../certificates/load-balancer-csr.json"
+  content_type  = "application/json"
+}

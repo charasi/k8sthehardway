@@ -25,27 +25,27 @@ output "public_agent_key_openssh" {
  */
 
 # Optional, to reference a specific controller
-output "controller_0_self_link" {
-  value = google_compute_instance.controllers[0].self_link
+output "controller_0_id" {
+  value = google_compute_instance.controllers[0].id
 }
 
-output "controller_1_self_link" {
-  value = google_compute_instance.controllers[1].self_link
+output "controller_1_id" {
+  value = google_compute_instance.controllers[1].id
 }
 
-output "controller_2_self_link" {
-  value = google_compute_instance.controllers[2].self_link
+output "controller_2_id" {
+  value = google_compute_instance.controllers[2].id
 }
 
 # Optional, to reference a specific controller
-output "worker_0_self_link" {
-  value = google_compute_instance.workers[0].self_link
+output "worker_0_id" {
+  value = google_compute_instance.workers[0].id
 }
 
-output "worker_1_self_link" {
-  value = google_compute_instance.workers[1].self_link
+output "worker_1_id" {
+  value = google_compute_instance.workers[1].id
 }
 
-output "worker_2__self_link" {
-  value = google_compute_instance.workers[2].self_link
+output "worker_2_id" {
+  value = google_compute_instance.workers[2].id
 }
