@@ -155,3 +155,19 @@ resource "google_storage_bucket_object" "load_balancer" {
   source = "../certificates/load-balancer-csr.json"
   content_type  = "application/json"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "load_balancer_config" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "ca-lb-config.json"
+  source = "../certificates/ca-lb-config.json"
+  content_type  = "application/json"
+}
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "load_balancer_ca" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "ca-lb-csr.json"
+  source = "../certificates/ca-lb-csr.json"
+  content_type  = "application/json"
+}

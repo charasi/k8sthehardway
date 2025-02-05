@@ -16,35 +16,18 @@ resource "google_compute_subnetwork" "proxy_only_subnet" {
   private_ip_google_access = true # For Private Google Access
 }
 
-# Health Checks
-resource "google_compute_http_health_check" "controller_health_check" {
-  name               = "controller-health-check"
-  request_path       = "/livez"
-  port               = 80
-  check_interval_sec = 5
-  timeout_sec        = 5
-  healthy_threshold  = 2
-  unhealthy_threshold = 2
-}
-
-resource "google_compute_http_health_check" "worker_health_check" {
+resource "google_compute_health_check" "worker_health_check" {
   name               = "worker-health-check"
-  request_path       = "/livez"
-  port               = 80
-  check_interval_sec = 5
-  timeout_sec        = 5
-  healthy_threshold  = 2
-  unhealthy_threshold = 2
-}
+  timeout_sec         = 1
+  check_interval_sec  = 1
+  healthy_threshold   = 4
+  unhealthy_threshold = 5
 
-resource "google_compute_instance_group" "controller_instance_group" {
-  name        = "controller-instance-group"
-  zone        = "us-west1-b"  # Adjust the zone where your controller instances reside
-  instances = [
-    data.terraform_remote_state.vpc_compute.outputs.controller_0_id,
-    data.terraform_remote_state.vpc_compute.outputs.controller_1_id,
-    data.terraform_remote_state.vpc_compute.outputs.controller_2_id
-  ]
+  http_health_check {
+    port_name          = "worker-health-check-port"
+    port = 80
+    request_path       = "/livez"
+  }
 }
 
 resource "google_compute_instance_group" "worker_instance_group" {
@@ -57,50 +40,28 @@ resource "google_compute_instance_group" "worker_instance_group" {
   ]
 }
 
-# Backend Services
-resource "google_compute_backend_service" "controller_backend_service" {
-  name        = "controller-backend-service"
-  protocol    = "HTTPS"
-  backend {
-    group = google_compute_instance_group.controller_instance_group.id
-  }
-  health_checks = [google_compute_http_health_check.controller_health_check.id]
-}
-
-resource "google_compute_backend_service" "worker_backend_service" {
+resource "google_compute_region_backend_service" "worker_backend_service" {
   name        = "worker-backend-service"
   protocol    = "HTTPS"
   backend {
     group = google_compute_instance_group.worker_instance_group.id
   }
-  health_checks = [google_compute_http_health_check.worker_health_check.id]
+  health_checks = [google_compute_health_check.worker_health_check.id]
 }
 
 # URL Map
-resource "google_compute_url_map" "k8_url_map" {
+resource "google_compute_region_url_map" "k8_url_map" {
   name = "k8-url-map"
 
-  default_service = google_compute_backend_service.controller_backend_service.id
-
-  host_rule {
-    hosts = ["*"]
-    path_matcher = "k8"
-  }
-
-  path_matcher {
-    name = "k8"
-    path_rule {
-      paths   = ["/"]
-      service = google_compute_backend_service.worker_backend_service.id
-    }
-  }
+  default_service = google_compute_region_backend_service.worker_backend_service.id
 }
 
 
 # Target HTTPS Proxy
-resource "google_compute_target_https_proxy" "k8_target_proxy" {
+resource "google_compute_region_target_https_proxy" "k8_target_proxy" {
   name      = "k8-target-proxy"
-  url_map   = google_compute_url_map.k8_url_map.id
+  url_map   = google_compute_region_url_map.k8_url_map.id
+  ssl_certificates = [google_compute_ssl_certificate.k8_ssl_cert.id]
 }
 
 resource "google_compute_ssl_certificate" "k8_ssl_cert" {
@@ -109,20 +70,12 @@ resource "google_compute_ssl_certificate" "k8_ssl_cert" {
   certificate = file("../k8_lb/load-balancer.pem")  # Your certificate
 }
 
-
-# Forwarding Rules
-resource "google_compute_global_forwarding_rule" "controller_forwarding_rule" {
-  name       = "controller-https-forwarding-rule"
-  ip_address = data.terraform_remote_state.vpc_compute.outputs.static_ip_address
-  target     = google_compute_target_https_proxy.k8_target_proxy.self_link
-  port_range = "6443"
-}
-
-resource "google_compute_global_forwarding_rule" "worker_forwarding_rule" {
+resource "google_compute_forwarding_rule" "worker_forwarding_rule" {
   name       = "worker-https-forwarding-rule"
   ip_address = data.terraform_remote_state.vpc_compute.outputs.static_ip_address
-  target     = google_compute_target_https_proxy.k8_target_proxy.self_link
+  target     = google_compute_region_target_https_proxy.k8_target_proxy.self_link
   port_range = "443"
+  region     = "us-west1"
 }
 
 

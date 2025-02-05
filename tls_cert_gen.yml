@@ -32,6 +32,8 @@
             - { source: "gs://kthw-misc/service-account-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/service-account-csr.json", dest: "/home/wisccourant/certificates/" }
             - { source: "gs://kthw-misc/load-balancer-csr.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-lb-config.json", dest: "/home/wisccourant/certificates/" }
+            - { source: "gs://kthw-misc/ca-lb-csr.json", dest: "/home/wisccourant/certificates/" }
           changed_when: false
           register: status
 
@@ -381,14 +383,23 @@
             msg: "The file exists"
           when: file_stat.stat.exists
 
+        - name: Generate the CA certificate and private key for load-balancer
+          ansible.builtin.shell: |
+            set -o pipefail
+            sudo cfssl gencert -initca ca-lb-csr.json | sudo cfssljson -bare ca
+          args:
+            executable: /bin/bash
+            chdir: /home/wisccourant/certificates/
+          changed_when: false
+
         - name: Generate the load balancer certificate and private key
           ansible.builtin.shell: |
             set -o pipefail
             sudo cfssl gencert \
-                -ca=ca.pem \
-                -ca-key=ca-key.pem \
-                -config=ca-config.json \
-                -profile=kubernetes \
+                -ca=ca-lb.pem \
+                -ca-key=ca-lb-key.pem \
+                -config=ca-lb-config.json \
+                -profile=load-balancer \
                 load-balancer-csr.json | cfssljson -bare load-balancer
           args:
             executable: /bin/bash
@@ -426,6 +437,8 @@
             - { source: "/home/wisccourant/certificates/service-account.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/load-balancer-key.pem", dest: "gs://kthw-misc/" }
             - { source: "/home/wisccourant/certificates/load-balancer.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/ca-lb-key.pem", dest: "gs://kthw-misc/" }
+            - { source: "/home/wisccourant/certificates/ca-lb.pem", dest: "gs://kthw-misc/" }
           changed_when: false
           register: status
 
