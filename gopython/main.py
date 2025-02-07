@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '112dabd20d7cbdec13cae29a753fe0c8c0'
+    password = '11be2c654bcb03f12b344aca5e8102b33a'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -146,8 +146,8 @@ def main():
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
-    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/load-balancer-key.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
+    gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/load-balancer.pem", "/home/charasi/cmu/devops/k8sthehardway/k8_lb")
 
     # Read the config.xml file
     with open("./etcd.xml", 'r') as file:
@@ -202,38 +202,6 @@ def main():
         config_xml = file.read()
 
     job = jenkins_tasks.create_jobs(jenkins, "create-workers", config_xml)
-
-    jenkins.build_job(job.name)
-
-    while job.is_running():
-        print(f"Build {job.build_id} is still running...")
-        time.sleep(10)
-
-    if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
-        exit(1)
-
-    # Read the config.xml file
-    with open("./worker_rbac.xml", 'r') as file:
-        config_xml = file.read()
-
-    job = jenkins_tasks.create_jobs(jenkins, "create-workers_rbac", config_xml)
-
-    jenkins.build_job(job.name)
-
-    while job.is_running():
-        print(f"Build {job.build_id} is still running...")
-        time.sleep(10)
-
-    if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
-        exit(1)
-
-    # Read the config.xml file
-    with open("./kubectl.xml", 'r') as file:
-        config_xml = file.read()
-
-    job = jenkins_tasks.create_jobs(jenkins, "create-kubectl", config_xml)
 
     jenkins.build_job(job.name)
 
