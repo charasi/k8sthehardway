@@ -7,7 +7,7 @@ resource "google_compute_region_health_check" "k8_health_check" {
   unhealthy_threshold = 3
 
   http_health_check {
-    port = 6443  # Kubernetes API port
+    port = 80  # Kubernetes API port
     request_path = "/livez"  # Adjust based on your application health check path
   }
 }
@@ -26,6 +26,7 @@ resource "google_compute_instance_group" "controller_instance_group" {
     name = "k8-api-server"
     port = 6443
   }
+
 }
 
 # Regional Backend Service for Controller Instances (Regional Load Balancer)

@@ -386,7 +386,7 @@
         - name: Generate the CA certificate and private key for load-balancer
           ansible.builtin.shell: |
             set -o pipefail
-            sudo cfssl gencert -initca ca-lb-csr.json | sudo cfssljson -bare ca
+            sudo cfssl gencert -initca ca-lb-csr.json | sudo cfssljson -bare ca-lb
           args:
             executable: /bin/bash
             chdir: /home/wisccourant/certificates/
