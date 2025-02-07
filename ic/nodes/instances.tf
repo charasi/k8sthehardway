@@ -50,7 +50,7 @@ resource "google_compute_instance" "workers" {
     
   metadata = {
     pod-cidr = "10.200.${count.index}.0/24"
-    startup-script = file("startup-script.sh")
+    startup-script = file("worker_script.sh")
     ssh-keys = <<EOF
       wisccourant:${tls_private_key.kthw_ssh.public_key_openssh}
       wisccourant:${tls_private_key.kthw_ssh_agent.public_key_openssh}
