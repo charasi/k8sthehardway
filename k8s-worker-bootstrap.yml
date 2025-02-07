@@ -286,7 +286,6 @@
             - { source: "gs://kthw-misc/kube-proxy.pem", dest: "/var/lib/kube-proxy/" }
             - { source: "gs://kthw-misc/kube-proxy-key.pem", dest: "/var/lib/kube-proxy/" }
             - { source: "gs://kthw-misc/{{ host_name.stdout | trim }}.yml", dest: "/var/lib/kubelet/" }
-            - { source: "gs://kthw-misc/nginx.conf", dest: "/etc/nginx/" }
           changed_when: false
           register: status
 
@@ -564,31 +563,6 @@
             cmd: sudo systemctl start containerd kubelet kube-proxy
             chdir: /home/wisccourant/
           changed_when: false
-
-        - name: Pause for 10 seconds
-          ansible.builtin.pause:
-            seconds: 10
-
-        - name: Start the nginx Services
-          ansible.builtin.command:
-            cmd: sudo systemctl start nginx
-            chdir: /home/wisccourant/
-          changed_when: false
-
-        - name: Enable the nginx Services
-          ansible.builtin.command:
-            cmd: sudo systemctl enable nginx
-            chdir: /home/wisccourant/
-
-        - name: Reload the nginx Services
-          ansible.builtin.command:
-            cmd: sudo systemctl reload nginx
-            chdir: /home/wisccourant/
-
-        - name: Restart the nginx Services
-          ansible.builtin.command:
-            cmd: sudo systemctl restart nginx
-            chdir: /home/wisccourant/
 
         - name: Pause for 10 seconds
           ansible.builtin.pause:
