@@ -1,23 +1,44 @@
-FROM golang:latest
+# Stage 1: Build stage
+FROM golang:alpine AS build
 
-RUN apt-get update
-RUN apt-get upgrade -y
+# Install required dependencies for Go build
+RUN apk add --no-cache gcc musl-dev
 
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY *.go ./
+# Copy the go.mod and go.sum files first to leverage Docker cache
+COPY go.mod go.sum ./
 
-RUN go mod init BookStoreWebBFF.go
+# Run go mod tidy to fetch dependencies
 RUN go mod tidy
-RUN go env -w GO111MODULE=auto
-RUN go get github.com/go-sql-driver/mysql
-RUN go get -u github.com/gorilla/mux
-RUN go get -u github.com/shopspring/decimal
-RUN go get github.com/golang-jwt/jwt
 
-RUN go build -o /BookStoreWebBFF
+# Copy only the webbff.go file (instead of the entire directory)
+COPY webbff.go ./
 
+# Install Go dependencies
+RUN go get github.com/go-sql-driver/mysql \
+    && go get -u github.com/gorilla/mux \
+    && go get -u github.com/shopspring/decimal \
+    && go get github.com/golang-jwt/jwt
+
+# Build the Go application
+RUN go build -o /webbff
+
+# Stage 2: Final stage (using Alpine)
+FROM alpine:latest
+
+# Install necessary runtime dependencies (musl libc, etc.)
+RUN apk add --no-cache libgcc
+
+RUN apk --no-cache add curl
+
+# Copy the Go binary from the build stage
+COPY --from=build /webbff /webbff
+
+# Expose the port the app will run on
 EXPOSE 8080
-#EXPOSE 3306
 
-CMD [ "/BookStoreWebBFF" ]
+# Command to run the application
+CMD ["/webbff"]
+

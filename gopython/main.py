@@ -49,7 +49,7 @@ def main():
 
     # Jenkins user credentials for authentication
     jenkins_user = 'kube'
-    password = '11be2c654bcb03f12b344aca5e8102b33a'
+    password = '11913f3d311d73ba9918026c3ad6dd3fad'
 
     # Initialize the Jenkins API client
     jenkins = Jenkins(jenkins_url, username=jenkins_user, password=password)
@@ -118,13 +118,10 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
-
     
     # Read the config.xml file
     with open("./certificates.xml", 'r') as file:
@@ -135,13 +132,11 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
-
+    
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin-key.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/admin.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
     gcp_tasks.gcp_cp_tasks('/home/charasi/google-cloud-sdk/bin/gsutil', "cp", "gs://kthw-misc/ca-key.pem", "/home/charasi/cmu/devops/k8sthehardway/kubelet")
@@ -158,11 +153,9 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
 
     # Read the config.xml file
@@ -174,11 +167,9 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
 
     # Read the config.xml file
@@ -190,11 +181,9 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
 
     # Read the config.xml file
@@ -206,11 +195,9 @@ def main():
     jenkins.build_job(job.name)
 
     while job.is_running():
-        print(f"Build {job.build_id} is still running...")
         time.sleep(10)
 
     if job.get_last_build().get_status() != 'SUCCESS':
-        print(f"Build {job.build_id} did not pass.")
         exit(1)
 
 

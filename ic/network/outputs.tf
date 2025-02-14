@@ -22,3 +22,11 @@ output "master_node_ip" {
 output "static_ip_address" {
   value = google_compute_address.kubernetes_the_hard_way.address
 }
+
+/**
+output "seagram_private_subnet" {
+  value = google_compute_global_address.seagram_private_ip_range.name
+}
+ */
+
+

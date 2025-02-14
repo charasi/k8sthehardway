@@ -4,9 +4,9 @@ metadata:
   name: customer-svc-lb
   namespace: bookstore-ns
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
-    app: customerservice
+    app: customer-service
   ports:
     - port: 3000
       targetPort: 3000

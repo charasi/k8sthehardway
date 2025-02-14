@@ -1,39 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deploy
+  name: webbff-deploy
   namespace: bookstore-ns
 spec:
   selector:
     matchLabels:
-      app: web
-  replicas: 2
+      app: web-bff
+  replicas: 1
   template:
     metadata:
       labels:
-        app: web
+        app: web-bff
     spec:
       #priorityClassName: high-priority
       containers:
-        - name: web
-          image: charasi/web:latest
+        - name: web-bff
+          image: charasi/web-bff:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: ADD_BOOKS
+              value: bookcmd-svc-lb.bookstore-ns.svc.cluster.local
+            - name: GET_BOOKS
+              value: book-query
+            - name: CUSTOMERS
+              value: customer-svc-lb.bookstore-ns.svc.cluster.local
           livenessProbe:
             httpGet:
               path: /status
               port: 8080
             initialDelaySeconds: 5
-            periodSeconds: 10
+            periodSeconds: 60
             #timeoutSeconds: 5
             #failureThreshold: 3
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: "kubernetes.io/hostname"
-              labelSelector:
-                matchExpressions:
-                  - key: "app"
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "kubernetes.io/hostname"
                     operator: In
                     values:
-                      - web
+                      - worker-0

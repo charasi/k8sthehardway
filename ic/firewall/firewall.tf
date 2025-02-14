@@ -58,7 +58,7 @@ resource "google_compute_firewall" "kthw_network_us_west1_subnet_firewall_allow_
   # Allow incoming TCP traffic on port 6443 (typically used by Kubernetes API server).
   allow {
     protocol = "tcp"
-    ports    = ["22", "80", "8080", "443", "6443", "8443"]  # Allow Kubernetes API server traffic (port 6443)
+    ports    = ["22", "80", "8080", "443", "3306", "30637", "31420", "6443", "8443"]  # Allow Kubernetes API server traffic (port 6443)
   }
 
   # Define the source IP ranges that are allowed to access the resources within the network.

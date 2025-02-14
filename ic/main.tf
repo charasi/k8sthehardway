@@ -22,6 +22,7 @@ module "instances" {
 
 module "buckets" {
   source = "../ic/bucket"
+  //sql_ip_address = module.seagram_database.seagram_ip_address
 }
 
 
@@ -30,12 +31,18 @@ module "target_nodes" {
   controller_0 = module.instances.controller_0_id
   controller_1 = module.instances.controller_1_id
   controller_2 = module.instances.controller_2_id
-  worker_0 = module.instances.worker_0_id
-  worker_1 = module.instances.worker_1_id
-  worker_2 = module.instances.worker_2_id
+  worker_0     = module.instances.worker_0_id
+  worker_1     = module.instances.worker_1_id
+  worker_2     = module.instances.worker_2_id
   ip_address   = module.vpc.static_ip_address
 }
 
+
+module "seagram_database" {
+  source                  = "../ic/mysql"
+  seagram_private_network = module.vpc.network_id
+  //seagram_cidr_range_name      = module.vpc.seagram_private_subnet
+}
 
 output "instance_outputs" {
   value     = module.instances
@@ -48,7 +55,7 @@ output "bucket_outputs" {
 }
 
 output "vpc_network_id" {
-  value     = module.vpc.network_id
+  value = module.vpc.network_id
 }
 
 output "controller_0_id" {

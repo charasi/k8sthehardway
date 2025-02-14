@@ -6,19 +6,30 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: customerservice
-  replicas: 2
+      app: customer-service
+  replicas: 1
   template:
     metadata:
       labels:
-        app: customerservice
+        app: customer-service
     spec:
       #priorityClassName: high-priority
       containers:
-        - name: customerservice
-          image: charasi/customerservice:latest
+        - name: customer-service
+          image: charasi/customer-svc:latest
           ports:
             - containerPort: 3000
+          env:
+            - name: DB_USER
+              value: remedy
+            - name: DB_PASS
+              value: skincream
+            - name: DB_HOST
+              value: 34.145.15.102
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_BOOKSTORE
+              value: customers
           livenessProbe:
             httpGet:
               path: /status
@@ -28,12 +39,11 @@ spec:
             #timeoutSeconds: 5
             #failureThreshold: 3
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: "kubernetes.io/hostname"
-              labelSelector:
-                matchExpressions:
-                  - key: "app"
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "kubernetes.io/hostname"
                     operator: In
                     values:
-                      - customerservice
+                      - worker-1

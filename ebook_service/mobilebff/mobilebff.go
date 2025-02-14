@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/mail"
 	"strings"
@@ -23,7 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// represents a book record, mapped to JSON structure
+// BookAdded represents a book record, mapped to JSON structure
 type BookAdded struct {
 	ISBN        string  `json:"ISBN"`
 	Title       string  `json:"title"`
@@ -34,7 +35,7 @@ type BookAdded struct {
 	Quantity    int     `json:"quantity"`
 }
 
-// represents a customer record, mapped to JSON structure
+// CustomerAdded represents a customer record, mapped to JSON structure
 type CustomerAdded struct {
 	ID       string `json:"id"`
 	UserId   string `json:"userId"`
@@ -45,18 +46,6 @@ type CustomerAdded struct {
 	City     string `json:"city"`
 	State    string `json:"state"`
 	Zipcode  string `json:"zipcode"`
-}
-
-// message structure
-type Duplicate struct {
-	Message string `json:"message"`
-}
-
-// represents a related book record, mapped to JSON structure
-type RelatedBooks struct {
-	ISBN   string `json:"ISBN"`
-	Title  string `json:"title"`
-	Author string `json:"Author"`
 }
 
 // map of US state codes
@@ -72,6 +61,7 @@ var states = map[string]bool{
 }
 
 /*
+AddBookEndpoint
 Adds a book to the system. The ISBN will be the unique identifier for the book.
 The book is added to the Book data table on MySql (the ISBN is the primary key).
 */
@@ -79,7 +69,12 @@ func AddBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse body to bookAdded
 	var bookAdded BookAdded
 	var requestBody, _ = io.ReadAll(r.Body)
-	json.Unmarshal(requestBody, &bookAdded)
+	err := json.Unmarshal(requestBody, &bookAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// book data validation
 	status := verifyBookData(bookAdded)
@@ -101,17 +96,26 @@ func AddBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	var responseBookAdded BookAdded
 	var response = getBookRequest(r, &bookAdded)
 	var responseBody, _ = io.ReadAll(response.Body)
-	json.Unmarshal(responseBody, &responseBookAdded)
+	err = json.Unmarshal(responseBody, &responseBookAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// if book is added, send success response
 	jsonResponseBody, _ := json.Marshal(&responseBookAdded)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", r.Host+"/books/"+responseBookAdded.ISBN)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
+	_, err = w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
+UpdateBookEndpoint
 Update a book’s information in the system.
 The ISBN will be the unique identifier for the book.
 */
@@ -119,7 +123,12 @@ func UpdateBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse body to bookAdded
 	var bookAdded BookAdded
 	var requestBody, _ = io.ReadAll(r.Body)
-	json.Unmarshal(requestBody, &bookAdded)
+	err := json.Unmarshal(requestBody, &bookAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// book data validation
 	status := verifyBookData(bookAdded)
@@ -141,14 +150,22 @@ func UpdateBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	var responseBookAdded BookAdded
 	var response = getBookRequest(r, &bookAdded)
 	var responseBody, _ = io.ReadAll(response.Body)
-	json.Unmarshal(responseBody, &responseBookAdded)
+	err = json.Unmarshal(responseBody, &responseBookAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// if book is updated, send success response
 	jsonResponseBody, _ := json.Marshal(&responseBookAdded)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", r.Host+"/books/"+responseBookAdded.ISBN)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
+	_, err = w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
@@ -176,6 +193,7 @@ func verifyBookData(data BookAdded) int {
 }
 
 /*
+RetrieveBookEndpoint
 return a book given its ISBN. Both endpoints shall produce the same response.
 */
 func RetrieveBookEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +210,7 @@ func RetrieveBookEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// parse body to bookAdded
 	var bookAdded BookAdded
-	// to conver genre to int and set value to 3
+	// to convert genre to int and set value to 3
 	var updatedBookAdded UpdatedBookAdded
 	// if header is invalid return 401 status
 	var success = VerifyHeaderAuth(r)
@@ -206,7 +224,13 @@ func RetrieveBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	var responseBookAdded BookAdded
 	var response = getBookRequest(r, &bookAdded)
 	var responseBody, _ = io.ReadAll(response.Body)
-	json.Unmarshal(responseBody, &responseBookAdded)
+	err := json.Unmarshal(responseBody, &responseBookAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
+
 	// replace in the response body the word “non-fiction” with the numeric value 3
 	updatedBookAdded.Author = responseBookAdded.Author
 	updatedBookAdded.Description = responseBookAdded.Description
@@ -221,38 +245,14 @@ func RetrieveBookEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", r.Host+"/books/"+updatedBookAdded.ISBN)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
-}
-
-/*
-This endpoint shall query the MongoDB collection looking for any book
-documents that contain the given keyword anywhere in the document data
-*/
-func RetrieveBooksKeywordEndpoint(w http.ResponseWriter, r *http.Request) {
-	// parse body to bookAdded
-	var bookAdded BookAdded
-	// if header is invalid return 401 status
-	var success = VerifyHeaderAuth(r)
-	if success == 1 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(401)
-		return
+	_, err = w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
 	}
-
-	// reroutes to internal load balancer
-	var responseBookAdded []BookAdded
-	var response = getBookRequest(r, &bookAdded)
-	var responseBody, _ = io.ReadAll(response.Body)
-	json.Unmarshal(responseBody, &responseBookAdded)
-
-	// return book if found
-	jsonResponseBody, _ := json.Marshal(&responseBookAdded)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
 }
 
 /*
+AddCustomerEndpoint
 Add a customer to the system.
 This endpoint is called to create the newly registered customer in the system.
 A unique numeric ID is generated for the new customer, and the customer is added to
@@ -288,7 +288,12 @@ func AddCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	var response = getCustomerRequest(r, &customerAdded)
 	var responseBody, _ = io.ReadAll(response.Body)
 	var responseCustomer CustomerAdded
-	json.Unmarshal(responseBody, &responseCustomer)
+	err = json.Unmarshal(responseBody, &responseCustomer)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// respond with success status code
 	id := responseCustomer.ID
@@ -296,10 +301,14 @@ func AddCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", "http://"+r.Host+"/customers/"+id)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
+	_, err = w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
+RetrieveRelatedBooksEndpoint
 access an external recommendation engine service every time the “related books”
 endpoint is executed and return recommendations for additional books the customer
 may want to purchase.
@@ -328,10 +337,14 @@ func RetrieveRelatedBooksEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//w.Header().Set("Location", r.Host+"/books/"+responseBookAdded.ISBN)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(responseBody))
+	_, err := w.Write([]byte(responseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
+verifyCustomerData
 request customer data validation
 */
 func verifyCustomerData(data CustomerAdded) int {
@@ -357,6 +370,7 @@ func verifyCustomerData(data CustomerAdded) int {
 }
 
 /*
+RetrieveCustomerEndpoint
 obtain the data for a customer given its numeric ID.
 This endpoint will retrieve the customer data on MySql and send the data in the
 response in JSON format. Note that ID is the  numeric ID, not the user-ID.
@@ -390,7 +404,12 @@ func RetrieveCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	var response = getCustomerRequest(r, &customerAdded)
 	var responseBody, _ = io.ReadAll(response.Body)
 	var responseCustomer CustomerAdded
-	json.Unmarshal(responseBody, &responseCustomer)
+	err := json.Unmarshal(responseBody, &responseCustomer)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(401)
+		return
+	}
 
 	// update customer response
 	updatedCustomerAdded.ID = responseCustomer.ID
@@ -403,10 +422,14 @@ func RetrieveCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", r.Host+"/customers/"+updatedCustomerAdded.ID)
 	w.WriteHeader(response.StatusCode)
-	w.Write([]byte(jsonResponseBody))
+	_, err = w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
+VerifyHeaderAuth
 Verifies if request from client is from a web device and not mobile
 returns 0 if client type is web, else 1
 */
@@ -416,7 +439,11 @@ func VerifyHeaderAuth(r *http.Request) int {
 	// for mapping json object
 	headers := make(map[string]interface{})
 	// map headers
-	json.Unmarshal([]byte(requestHeaders), &headers)
+	err := json.Unmarshal([]byte(requestHeaders), &headers)
+	if err != nil {
+
+	}
+
 	// return 1 if Authorization header is not present
 	tokenHeader, status := r.Header["Authorization"]
 	if !status {
@@ -436,10 +463,7 @@ func VerifyHeaderAuth(r *http.Request) int {
 	if err != nil {
 		msg := err.Error()
 		isInvalid := strings.Contains(msg, "token signature is invalid: signature is invalid")
-		//if !isInvalid {
-		//	return 1
 		fmt.Print(isInvalid)
-		//}
 	}
 
 	// get and map claims, return if claims could not be parsed
@@ -454,7 +478,7 @@ func VerifyHeaderAuth(r *http.Request) int {
 		return 1
 	}
 
-	// return if sub claim does not contain the following
+	// return if claim does not contain the following
 	if sub != "starlord" && sub != "gamora" && sub != "drax" &&
 		sub != "rocket" && sub != "groot" {
 		return 1
@@ -473,14 +497,14 @@ func VerifyHeaderAuth(r *http.Request) int {
 	}
 
 	// claim expiration date
-	var claimDate int64 = int64(date)
+	var claimDate = int64(date)
 	//claimDate := time.Unix(convertDate, 0)
 
 	// current date
-	var currentDate int64 = time.Now().Unix()
+	var currentDate = time.Now().Unix()
 	//currentDate := time.Unix(currentTime, 0)
 
-	// errror if current date is greater than claim date
+	// error if current date is greater than claim date
 	if currentDate > claimDate {
 		return 1
 	}
@@ -535,7 +559,6 @@ func getBookRequest(r *http.Request, requestBookAdded *BookAdded) *http.Response
 	switch method {
 	case "GET":
 		baseUrl := "http://ac8dc363275454af9932233199b0fd78-392305053.us-east-1.elb.amazonaws.com:3000"
-		//path := r.URL.Path
 		path := r.RequestURI
 		url := baseUrl + path
 		response, _ = http.Get(url)
@@ -554,28 +577,34 @@ func getBookRequest(r *http.Request, requestBookAdded *BookAdded) *http.Response
 //	monitor the health of the REST service within EKS.
 //
 // In your K8S deployment file, specify a liveness probe
-func status(w http.ResponseWriter, r *http.Request) {
+func statusEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("OK"))
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		log.Fatalf("Error sending response %v", err)
+	}
 }
 
 /*
 Main function to handle routes/path for web server
 */
 func main() {
-	//mux := http.NewServeMux()
-	mux := mux.NewRouter()
-	mux.HandleFunc("/cmd/books", AddBookEndpoint).Methods("POST")
-	mux.HandleFunc("/cmd/books/{ISBN}", UpdateBookEndpoint).Methods("PUT")
-	mux.HandleFunc("/books/isbn/{ISBN}", RetrieveBookEndpoint).Methods("GET")
-	mux.HandleFunc("/books/{ISBN}", RetrieveBookEndpoint).Methods("GET")
-	mux.HandleFunc("/books", RetrieveBookEndpoint).Queries(
+	//router := http.NewServeMux()
+	router := mux.NewRouter()
+	router.HandleFunc("/cmd/books", AddBookEndpoint).Methods("POST")
+	router.HandleFunc("/cmd/books/{ISBN}", UpdateBookEndpoint).Methods("PUT")
+	router.HandleFunc("/books/isbn/{ISBN}", RetrieveBookEndpoint).Methods("GET")
+	router.HandleFunc("/books/{ISBN}", RetrieveBookEndpoint).Methods("GET")
+	router.HandleFunc("/books", RetrieveBookEndpoint).Queries(
 		"keyword", "{keyword}").Methods("GET")
-	mux.HandleFunc("/customers", RetrieveCustomerEndpoint).Methods("GET")
-	mux.HandleFunc("/customers", AddCustomerEndpoint).Methods("POST")
-	mux.HandleFunc("/customers/{id}", RetrieveCustomerEndpoint).Methods("GET")
-	mux.HandleFunc("/books/{ISBN}/related-books", RetrieveRelatedBooksEndpoint).Methods("GET")
-	mux.HandleFunc("/status", status).Methods("GET")
-	//http.ListenAndServe(":2345", mux)
-	http.ListenAndServe(":8080", mux)
+	router.HandleFunc("/customers", RetrieveCustomerEndpoint).Methods("GET")
+	router.HandleFunc("/customers", AddCustomerEndpoint).Methods("POST")
+	router.HandleFunc("/customers/{id}", RetrieveCustomerEndpoint).Methods("GET")
+	router.HandleFunc("/books/{ISBN}/related-books", RetrieveRelatedBooksEndpoint).Methods("GET")
+	router.HandleFunc("/status", statusEndpoint).Methods("GET")
+	//http.ListenAndServe(":2345", router)
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
 }

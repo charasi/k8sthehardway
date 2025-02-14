@@ -6,12 +6,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: mobile
+      app: mobile-bff
   replicas: 2
   template:
     metadata:
       labels:
-        app: mobile
+        app: mobile-bff
     spec:
       #priorityClassName: high-priority
       containers:
@@ -28,12 +28,11 @@ spec:
             #timeoutSeconds: 5
             #failureThreshold: 3
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: "kubernetes.io/hostname"
-              labelSelector:
-                matchExpressions:
-                  - key: "app"
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "kubernetes.io/hostname"
                     operator: In
                     values:
-                      - mobile
+                      - worker-0

@@ -171,3 +171,22 @@ resource "google_storage_bucket_object" "load_balancer_ca" {
   source = "../certificates/ca-lb-csr.json"
   content_type  = "application/json"
 }
+
+# Upload a file to the GCS bucket
+resource "google_storage_bucket_object" "seagram_database" {
+  bucket = google_storage_bucket.kthw_misc.name
+  name   = "ca-lb-csr.json"
+  source = "../certificates/ca-lb-csr.json"
+  content_type  = "application/json"
+}
+
+/**
+resource "google_storage_bucket_object" "ip_object" {
+  name   = "seagram-database.txt"         # The object name in the bucket
+  bucket = google_storage_bucket.kthw_misc.name
+  content = <<EOF
+    ${var.sql_ip_address}
+  EOF
+}
+   */
+

@@ -31,8 +31,8 @@ resource "google_compute_region_health_check" "worker_health_check" {
 
   http_health_check {
     port_name    = "worker-health-check-port"
-    port         = 80
-    request_path = "/livez"
+    port         = 30637
+    request_path = "/healthz"
   }
 }
 
@@ -46,12 +46,21 @@ resource "google_compute_instance_group" "worker_instance_group" {
     data.terraform_remote_state.vpc_compute.outputs.worker_2_id
   ]
 
+  /**
   named_port {
     name = "ingress"
-    port = 80
+    port = 30637
+  }
+
+   */
+
+  named_port {
+    name = "ingress-http"
+    port = 30637
   }
 }
 
+/**
 # SSL Certificate
 resource "google_compute_region_ssl_certificate" "k8_ssl_cert" {
   region      = "us-west1"
@@ -59,6 +68,8 @@ resource "google_compute_region_ssl_certificate" "k8_ssl_cert" {
   private_key = file("../k8_lb/load-balancer-key.pem") # Your private key
   certificate = file("../k8_lb/load-balancer.pem")     # Your certificate
 }
+
+ */
 
 # Regional Backend Service
 resource "google_compute_region_backend_service" "worker_backend_service" {
@@ -95,11 +106,11 @@ resource "google_compute_target_https_proxy" "k8_target_proxy" {
  */
 
 # Regional Target HTTPS Proxy
-resource "google_compute_region_target_https_proxy" "k8_target_proxy" {
+resource "google_compute_region_target_http_proxy" "k8_target_proxy" {
   name             = "k8-target-proxy"
   region           = "us-west1"
   url_map          = google_compute_region_url_map.k8_url_map.id
-  ssl_certificates = [google_compute_region_ssl_certificate.k8_ssl_cert.id]
+  //ssl_certificates = [google_compute_region_ssl_certificate.k8_ssl_cert.id]
 
   /**
   depends_on = [
@@ -115,8 +126,8 @@ resource "google_compute_forwarding_rule" "worker_forwarding_rule" {
   network               = data.terraform_remote_state.vpc_compute.outputs.vpc_network_id
   region                = "us-west1" # Specify your region here
   ip_address            = data.terraform_remote_state.vpc_compute.outputs.static_ip_address
-  target                = google_compute_region_target_https_proxy.k8_target_proxy.self_link
-  port_range            = "443"
+  target                = google_compute_region_target_http_proxy.k8_target_proxy.self_link
+  port_range            = "80"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   network_tier          = "PREMIUM"
 }

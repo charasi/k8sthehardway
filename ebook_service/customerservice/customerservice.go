@@ -9,21 +9,23 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/mail"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
-// represents a customer record, mapped to JSON structure
+// CustomerAdded represents a customer record, mapped to JSON structure
 type CustomerAdded struct {
 	ID       string `json:"id"`
 	UserId   string `json:"userId"`
@@ -36,12 +38,19 @@ type CustomerAdded struct {
 	Zipcode  string `json:"zipcode"`
 }
 
-// message structure
+// Duplicate message structure
 type Duplicate struct {
 	Message string `json:"message"`
 }
 
+var USER = os.Getenv("DB_USER")
+var PASS = os.Getenv("DB_PASS")
+var HOST = os.Getenv("DB_HOST")
+var PORT = os.Getenv("DB_PORT")
+var BOOKSTORE = os.Getenv("DB_BOOKSTORE")
+
 /*
+AddCustomerEndpoint
 Add a customer to the system.
 This endpoint is called to create the newly registered customer in the system.
 A unique numeric ID is generated for the new customer, and the customer is added to
@@ -51,10 +60,15 @@ func AddCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse body to customerAdded
 	var customerAdded CustomerAdded
 	var requestBody, _ = io.ReadAll(r.Body)
-	json.Unmarshal(requestBody, &customerAdded)
+	err := json.Unmarshal(requestBody, &customerAdded)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(404)
+		return
+	}
 
-	cus, _ := json.Marshal(&customerAdded)
-	KafkaProducer(cus)
+	//cus, _ := json.Marshal(&customerAdded)
+	//KafkaProducer(cus)
 
 	// query for customer
 	query := "INSERT INTO customers (userId, name, phone, address, address2, city, state, zipcode)" +
@@ -74,7 +88,10 @@ func AddCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 		jsonMessage, _ := json.Marshal(&message)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(422)
-		w.Write(jsonMessage)
+		_, err = w.Write(jsonMessage)
+		if err != nil {
+			log.Fatalf("Error writing response from server: %v", err)
+		}
 		return
 	}
 
@@ -85,25 +102,33 @@ func AddCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", "http://"+r.Host+"/customers/"+id)
 	w.WriteHeader(201)
-	w.Write([]byte(jsonResponseBody))
+	_, err = w.Write(jsonResponseBody)
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 
-	// send to kafka broker
-	//cus, _ := json.Marshal(&customerAdded)
-	//KafkaProducer(cus)
 }
 
 /*
+AddCustomerTable
 Add/Update customer record
 */
 func AddCustomerTable(query string, args []interface{}) int {
-	db, err := sql.Open("mysql", "awsadmin:awspassword@tcp(assn4-dbauroraa-esuvdyingzvs.c42qw4pddowd.us-east-1.rds.amazonaws.com:3306)/bookstore")
-	//db, err := sql.Open("mysql", "charasi:Skittles05@10@tcp(127.0.0.1:3306)/bookstore")
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+		USER, PASS, HOST, PORT, BOOKSTORE)
+
+	db, err := sql.Open("mysql", dbURI)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	// close database after exiting function
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err = db.Close()
+		if err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}(db)
 
 	// get record, return error if customer already exists
 	_, err = db.Exec(query, args...)
@@ -120,7 +145,7 @@ func AddCustomerTable(query string, args []interface{}) int {
 	var id int
 	records := db.QueryRow("SELECT id from customers WHERE userId = ?",
 		args[0]).Scan(&id)
-	if records == sql.ErrNoRows {
+	if errors.Is(records, sql.ErrNoRows) {
 		return -2
 	} else {
 		return id
@@ -129,6 +154,7 @@ func AddCustomerTable(query string, args []interface{}) int {
 }
 
 /*
+RetrieveCustomerEndpoint
 obtain the data for a customer given its numeric ID.
 This endpoint will retrieve the customer data on MySql and send the data in the
 response in JSON format. Note that ID is the  numeric ID, not the user-ID.
@@ -184,22 +210,33 @@ func RetrieveCustomerEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", r.Host+"/customers/"+customerAdded.ID)
 	w.WriteHeader(200)
-	w.Write([]byte(jsonResponseBody))
+	_, err := w.Write([]byte(jsonResponseBody))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
+GetCustomerRecord
 retrieves customer record
 */
 func GetCustomerRecord(query string, key string, customerAdded *CustomerAdded) int {
-	db, err := sql.Open("mysql", "awsadmin:awspassword@tcp(assn4-dbauroraa-esuvdyingzvs.c42qw4pddowd.us-east-1.rds.amazonaws.com:3306)/bookstore")
-	//db, err := sql.Open("mysql", "charasi:Skittles05@10@tcp(127.0.0.1:3306)/bookstore")
 
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+		USER, PASS, HOST, PORT, BOOKSTORE)
+
+	db, err := sql.Open("mysql", dbURI)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	// close database after exiting function
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err = db.Close()
+		if err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}(db)
 
 	// query customer record, return error if not found
 	result := db.QueryRow(query, key).Scan(&customerAdded.ID, &customerAdded.UserId,
@@ -207,7 +244,7 @@ func GetCustomerRecord(query string, key string, customerAdded *CustomerAdded) i
 		&customerAdded.Address2, &customerAdded.City, &customerAdded.State,
 		&customerAdded.Zipcode)
 
-	if result == sql.ErrNoRows {
+	if errors.Is(result, sql.ErrNoRows) {
 		return 1
 	} else {
 		return 0
@@ -236,9 +273,10 @@ func verifyRetrieveScenarios(scenario string, key string) int {
 }
 
 /*
-*
+KafkaProducer
 kafka producer that sends messages to subscribed topics
 */
+/**
 func KafkaProducer(jsonResponseBody []byte) {
 	// topic
 	const (
@@ -290,25 +328,31 @@ func KafkaProducer(jsonResponseBody []byte) {
 		p.Close()
 	}
 }
+*/
 
 //	monitor the health of the REST service within EKS.
 //
 // In your K8S deployment file, specify a liveness probe
-func status(w http.ResponseWriter, r *http.Request) {
+func statusEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("OK"))
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		log.Fatalf("Error writing response from server: %v", err)
+	}
 }
 
 /*
 Main function to handle routes/path for web server
 */
 func main() {
-	//mux := http.NewServeMux()
-	mux := mux.NewRouter()
-	mux.HandleFunc("/customers", RetrieveCustomerEndpoint).Methods("GET")
-	mux.HandleFunc("/customers", AddCustomerEndpoint).Methods("POST")
-	mux.HandleFunc("/customers/{id}", RetrieveCustomerEndpoint).Methods("GET")
-	mux.HandleFunc("/status", status).Methods("GET")
-	//http.ListenAndServe(":2345", mux)
-	http.ListenAndServe(":3000", mux)
+	//router := http.NewServeMux()
+	router := mux.NewRouter()
+	router.HandleFunc("/customers", RetrieveCustomerEndpoint).Methods("GET")
+	router.HandleFunc("/customers", AddCustomerEndpoint).Methods("POST")
+	router.HandleFunc("/customers/{id}", RetrieveCustomerEndpoint).Methods("GET")
+	router.HandleFunc("/status", statusEndpoint).Methods("GET")
+	err := http.ListenAndServe(":3000", router)
+	if err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
 }

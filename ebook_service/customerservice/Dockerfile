@@ -1,23 +1,40 @@
-FROM golang:latest
+# First stage: Build the Go application
+FROM golang:1.20-alpine AS builder
 
-RUN apt-get update
-RUN apt-get upgrade -y
+# Install dependencies for building (if any additional build tools are needed)
+RUN apk update && apk add --no-cache git
 
+# Set the working directory
 WORKDIR /app
 
+# Copy the go.mod and go.sum files first to leverage Docker cache
+COPY go.mod go.sum ./
+
+# Run go mod tidy to fetch dependencies
+RUN go mod tidy
+
+# Copy all Go files into the container
 COPY *.go ./
 
-RUN go mod init Customer.go
-#RUN go mod tidy
-RUN go env -w GO111MODULE=auto
-RUN go get github.com/go-sql-driver/mysql
-RUN go get -u github.com/gorilla/mux
-RUN go get github.com/confluentinc/confluent-kafka-go/kafka
-#RUN go get -u github.com/shopspring/decimal
+RUN go get github.com/confluentinc/confluent-kafka-go/kafka \
+    && go get github.com/go-sql-driver/mysql \
+    && go get github.com/gorilla/mux
 
-RUN go build -o /Customer
+# Build the Go binary
+RUN go build -o /customerservice .
 
+# Second stage: Create the final minimal image
+FROM alpine:latest
+
+# Install necessary dependencies to run the app
+RUN apk update && apk add --no-cache libc6-compat
+
+# Copy the compiled Go binary from the builder image
+COPY --from=builder /customerservice .
+
+# Expose the port the app will run on
 EXPOSE 3000
-#EXPOSE 3306
 
-CMD [ "/Customer" ]
+# Command to run the Go application
+CMD ["/customerservice"]
+

@@ -46,8 +46,8 @@ func main() {
 
 	collection = client.Database("BooksDB").Collection("books_casiama")
 
-	db, err := sql.Open("mysql", "awsadmin:awspassword@tcp(assn4-dbauroraa-esuvdyingzvs.c42qw4pddowd.us-east-1.rds.amazonaws.com:3306)/bookstore")
-	//db, err := sql.Open("mysql", "charasi:Skittles05@10@tcp(127.0.0.1:3306)/bookstore")
+	db, err := sql.Open("mysql", "awsadmin:awspassword@tcp(assn4-dbauroraa-esuvdyingzvs.c42qw4pddowd.us-east-1.rds.amazonaws.com:3306)/bookcmd")
+	//db, err := sql.Open("mysql", "charasi:Skittles05@10@tcp(127.0.0.1:3306)/bookcmd")
 	if err != nil {
 		panic(err.Error())
 	}

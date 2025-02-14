@@ -120,3 +120,26 @@ resource "google_compute_route" "worker_route_2" {
   next_hop_ip   = "10.240.0.22"  # Internal IP of worker-2
   depends_on = [google_compute_subnetwork.kthw-network-us-west1-subnet]
 }
+
+/**
+# Step 1: Reserve a Private IP Range in the VPC
+resource "google_compute_global_address" "seagram_private_ip_range" {
+  name          = "seagram-private-ip-range"
+  address_type  = "INTERNAL"
+  network       = google_compute_network.kthw_network.id
+  purpose       = "VPC_PEERING"
+  prefix_length = 24
+  address = "10.240.40.0"
+}
+
+
+# Step 2: Set up the Private Services Access connection for Cloud SQL
+resource "google_service_networking_connection" "seagram_database_subnetwork" {
+  network                 = google_compute_network.kthw_network.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.seagram_private_ip_range.name]
+  depends_on              = [google_compute_global_address.seagram_private_ip_range]
+  update_on_creation_fail = true
+}
+
+ */
